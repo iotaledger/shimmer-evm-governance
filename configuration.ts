@@ -1,6 +1,3 @@
-export const IF_VOTES_TOKEN_NAME = "wSMR";
-export const IF_VOTES_TOKEN_SYMBOL = "wSMR";
-
 // Minimum delay in seconds for operations after the proposal passes
 export const TIME_LOCK_MIN_DELAY = 3600; // 1 hour
 
@@ -16,4 +13,4 @@ export const PROPOSAL_THRESHOLD = 0; // No proposal threshold
 
 // Voting period extension after quorum is reached. This prevents a large voter from
 // swaying a vote and triggering quorum at the last minute, by ensuring there is always time for other voters to react
-export const PROPOSAL_LATE_QUORUM_EXTENSION = 24; // 24 hours
+export const PROPOSAL_LATE_QUORUM_EXTENSION = 0; // 24 hours

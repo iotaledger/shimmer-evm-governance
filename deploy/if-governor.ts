@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { IFGovernor, IFVotesToken, IFTimelock } from "../typechain-types";
+import { IFGovernor, wSMR, IFTimelock } from "../typechain-types";
 import {
   PROPOSAL_QUORUM_PERCENT,
   PROPOSAL_VOTING_PERIOD,
@@ -9,7 +9,7 @@ import {
 } from "../configuration";
 
 async function deployIFGovernor(
-  IFVotesTokenContract: IFVotesToken,
+  IFVotesTokenContract: wSMR,
   IFTimelockContract: IFTimelock
 ): Promise<IFGovernor> {
   const IFGovernorContract = await ethers.deployContract("IFGovernor", [

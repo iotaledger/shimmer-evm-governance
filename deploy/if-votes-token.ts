@@ -1,12 +1,8 @@
 import { ethers } from "hardhat";
-import { IFVotesToken } from "../typechain-types";
-import { IF_VOTES_TOKEN_NAME, IF_VOTES_TOKEN_SYMBOL } from "../configuration";
+import { wSMR } from "../typechain-types";
 
-async function deployIFVotesToken(): Promise<IFVotesToken> {
-  const IFVotesTokenContract = await ethers.deployContract("IFVotesToken", [
-    IF_VOTES_TOKEN_NAME,
-    IF_VOTES_TOKEN_SYMBOL,
-  ]);
+async function deployIFVotesToken(): Promise<wSMR> {
+  const IFVotesTokenContract = await ethers.deployContract("wSMR", []);
   await IFVotesTokenContract.waitForDeployment();
 
   console.log(

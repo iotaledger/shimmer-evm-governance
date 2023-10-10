@@ -20,7 +20,7 @@ async function storeDeployedContractAddressList(
     network: network.name,
     chainId: network.config.chainId,
     IFGovernor: await deployedIFGovernorContract.getAddress(),
-    IFVotesToken: await deployedIFVotesTokenContract.getAddress(),
+    wSMR: await deployedIFVotesTokenContract.getAddress(),
     IFTimelock: await deployedIFTimelockContract.getAddress(),
   };
 
