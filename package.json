@@ -4,7 +4,11 @@
   "description": "On-chain governance for SMR tokens.",
   "scripts": {
     "clean": "rimraf artifacts cache",
-    "compile": "npm run clean && npx hardhat compile"
+    "compile": "npm run clean && npx hardhat compile",
+    "test": "npx hardhat test",
+    "deploy-hardhat": "npx hardhat run scripts/deploy_governance.ts --network hardhat",
+    "deploy-shimmerEvmTestnet": "npx hardhat run scripts/deploy_governance.ts --network shimmerEvmTestnet",
+    "deploy-shimmerEvmMainnet": "npx hardhat run scripts/deploy_governance.ts --network shimmerEvmMainnet"
   },
   "repository": {
     "type": "git",

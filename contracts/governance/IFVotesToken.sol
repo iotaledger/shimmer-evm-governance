@@ -17,12 +17,9 @@ contract IFVotesToken is
     ERC20Votes
 {
     constructor(
-        address initialOwner
-    )
-        ERC20("IFVotesToken", "DT")
-        Ownable(initialOwner)
-        ERC20Permit("IFVotesToken")
-    {}
+        string memory _name,
+        string memory _symbol
+    ) ERC20(_name, _symbol) Ownable(_msgSender()) ERC20Permit("IFVotesToken") {}
 
     function pause() public onlyOwner {
         _pause();

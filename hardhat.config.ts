@@ -13,12 +13,14 @@ module.exports = {
     enabled: true,
   },
   networks: {
-    hardhat: {},
+    hardhat: { chainId: 31337 },
     shimmerEvmTestnet: {
+      chainId: 148,
       url: SHIMMER_EVM_TESTNET_RPC_URL,
       accounts: [`${process.env.DEPLOYER_ACCOUNT_PRIV_KEY}`],
     },
     shimmerEvmMainnet: {
+      chainId: 148,
       url: SHIMMER_EVM_MAINNET_RPC_URL,
       accounts: [`${process.env.DEPLOYER_ACCOUNT_PRIV_KEY}`],
     },

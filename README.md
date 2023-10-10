@@ -14,3 +14,35 @@ The wSMR tokens can be unwrapped back into the SMR tokens.
 ## Installation
 
 `npm i`
+
+## Configuration
+
+- The deployer account private key is configured in `.env` that is renamed from the template `.env.example`.
+
+- Contract deployment parameters are configured in `configuration.ts`.
+
+## Governance deployment
+
+This is implemented in the file `scripts\deploy_governance.ts` where **governance setup** is implemented in the file `deploy\setup-governance.ts`.
+
+### Deploy to local Hardhat
+
+`npm run deploy-hardhat`
+
+### Deploy to local Hardhat
+
+`npm run deploy-hardhat`
+
+The deployed contract addresses are stored in the folder `deployed-contract-address\hardhat`
+
+### Deploy to ShimmerEVM testnet
+
+`npm run deploy-shimmerEvmTestnet`
+
+The deployed contract addresses are stored in the folder `deployed-contract-address\shimmerEvmTestnet`
+
+### Deploy to ShimmerEVM mainnet
+
+`npm run deploy-shimmerEvmMainnet`
+
+The deployed contract addresses are stored in the folder `deployed-contract-address\shimmerEvmMainnet`
