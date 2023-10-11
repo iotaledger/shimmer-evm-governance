@@ -15,6 +15,7 @@ async function setupGovernance(
 
   // Timelock contract grants PROPOSER_ROLE to Governor contract
   // so that Governor contract can call the function queue()
+  // that further calls the function schedule() of TimelockController
   // to place the proposal into the Timelock contract queue
   let tx = await IFTimelockContract.grantRole(
     PROPOSER_ROLE,
@@ -26,7 +27,8 @@ async function setupGovernance(
   );
 
   // Timelock contract grants EXECUTOR_ROLE to address of zero
-  // so that Governor contract can call the function execute()
+  // so that Governor contract can call the function execute() of Governor contract
+  // that is overriden by the function execute() of TimelockController contract
   // to have the Timelock contract to run the proposal execution.
   // Eventually, it is the Timelock contract that will run the proposal's execution
   tx = await IFTimelockContract.grantRole(EXECUTOR_ROLE, ADDRESS_ZERO);

@@ -9,7 +9,7 @@ To make it secure and transparent for the Shimmer Community to control and acces
 The Governance system, which will run on the ShimmerEVM network, includes smart contracts based on [OpenZeppelin open source libraries](https://github.com/OpenZeppelin/openzeppelin-contracts/tree/master/contracts/governance) and uses [Tally](https://www.tally.xyz/) to provide a user-friendly interface that facilitates the governance operations.
 
 To participate in Governance, SMR tokens from L1 must be deposited in the Shimmer EVM Chain to receive the SMR tokens on the user's L2 Account. This can be done via the Firefly wallet.
-After that, the SMR tokens on L2 need to be wrapped into wSMR tokens as the governance token. The wrapping functionality will be provided by the [Shimmer EVM toolkit application](https://evm-toolkit.evm.shimmer.network/) 
+After that, the SMR tokens on L2 need to be wrapped into wSMR tokens as the governance token. The wrapping functionality will be provided by the [Shimmer EVM toolkit application](https://evm-toolkit.evm.shimmer.network/)
 
 The wrapping of a user's SMR tokens is necessary because only wSMR tokens include the necessary `ERC20votes` extension that enables Governance functionalities:
 
@@ -52,3 +52,7 @@ The deployed contract addresses are stored in the folder `deployed-contract-addr
 `npm run deploy-shimmerEvmMainnet`
 
 The deployed contract addresses are stored in the folder `deployed-contract-address\shimmerEvmMainnet`
+
+## Unit-test
+
+`npm run test`

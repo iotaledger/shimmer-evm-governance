@@ -7,6 +7,9 @@ const SHIMMER_EVM_TESTNET_RPC_URL =
 
 const SHIMMER_EVM_MAINNET_RPC_URL = "https://json-rpc.evm.shimmer.network";
 
+const SEPOLIA_RPC_URL =
+  "https://eth-sepolia.g.alchemy.com/v2/j4DkeuoQAmLmSMLZ1AGZeEUdY9f5b25U";
+
 module.exports = {
   defaultNetwork: "hardhat",
   gasReporter: {
@@ -22,6 +25,11 @@ module.exports = {
     shimmerEvmMainnet: {
       chainId: 148,
       url: SHIMMER_EVM_MAINNET_RPC_URL,
+      accounts: [`${process.env.DEPLOYER_ACCOUNT_PRIV_KEY}`],
+    },
+    sepolia: {
+      chainId: 11155111,
+      url: SEPOLIA_RPC_URL,
       accounts: [`${process.env.DEPLOYER_ACCOUNT_PRIV_KEY}`],
     },
   },

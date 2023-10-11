@@ -8,7 +8,8 @@
     "test": "npx hardhat test",
     "deploy-hardhat": "npx hardhat run scripts/deploy_governance.ts --network hardhat",
     "deploy-shimmerEvmTestnet": "npx hardhat run scripts/deploy_governance.ts --network shimmerEvmTestnet",
-    "deploy-shimmerEvmMainnet": "npx hardhat run scripts/deploy_governance.ts --network shimmerEvmMainnet"
+    "deploy-shimmerEvmMainnet": "npx hardhat run scripts/deploy_governance.ts --network shimmerEvmMainnet",
+    "deploy-sepolia": "npx hardhat run scripts/deploy_governance.ts --network sepolia"
   },
   "repository": {
     "type": "git",
@@ -27,6 +28,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.0",
-    "dotenv": "^16.1.4"
+    "dotenv": "^16.1.4",
+    "web3-eth-contract": "^4.1.0"
   }
 }

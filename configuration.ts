@@ -8,7 +8,7 @@ export const TIME_LOCK_ADMIN_MULTISIG =
 // Governor Values
 export const PROPOSAL_QUORUM_PERCENT = 4; // need 4% of voters to pass
 export const PROPOSAL_VOTING_PERIOD = 7; // 7 days
-export const PROPOSAL_VOTING_DELAY = 0; // No voting delay so that snapshot happens immediately
+export const PROPOSAL_VOTING_DELAY = 1; // No voting delay so that snapshot happens immediately
 export const PROPOSAL_THRESHOLD = 0; // No proposal threshold
 
 // Voting period extension after quorum is reached. This prevents a large voter from
