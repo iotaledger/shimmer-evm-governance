@@ -35,10 +35,6 @@ This is implemented in the file `scripts\deploy_governance.ts` where **governanc
 
 `npm run deploy-hardhat`
 
-### Deploy to local Hardhat
-
-`npm run deploy-hardhat`
-
 The deployed contract addresses are stored in the folder `deployed-contract-address\hardhat`
 
 ### Deploy to ShimmerEVM testnet

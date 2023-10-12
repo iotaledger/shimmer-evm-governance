@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { EventLog } from "ethers";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { IFGovernor, wSMR, IFTimelock } from "../typechain-types";
 import deployIFGovernor from "../deploy/if-governor";
 import deployIFVotesToken from "../deploy/if-votes-token";
@@ -13,7 +14,7 @@ import {
   PROPOSAL_VOTING_DELAY,
   PROPOSAL_VOTING_PERIOD,
 } from "../configuration";
-import { getBalanceNative, increaseTime, mineBlocks } from "../utils";
+import { getBalanceNative } from "../utils";
 import setupGovernance from "../deploy/setup-governance";
 
 describe("IF Governance Test", () => {
@@ -102,14 +103,26 @@ describe("IF Governance Test", () => {
   it("Create proposal to transfer native SMR to the specified recipient", async () => {
     PROPOSAL_DESCRIPTION = "My first-ever proposal";
 
+    // No need to specify {value: ...} when encodeFunctionData
+    // because the "value" will be specified when calling the function
+    // propose(), queue() and execute() of Governor contract
     encodedFunctionCall = IFTimelockContract.interface.encodeFunctionData(
       "transferNativeSMR",
       [RECIPIENT]
     );
 
+    // Because of voting delay, once created, the proposal voting will start immediately
+    // Thus, the voting power snapshot is also performed immediately
+    // Meaning that, the users need to delegate for voting power before the proposal creation
+    await IFVotesTokenContract.delegate(signer);
+
     const proposeTx = await IFGovernorContract.propose(
       [IFTimelockContract],
+
+      // Specify the {value: ...} for interacting with payable func
+      // Set to 0 for non payable function
       [RECIPIENT_AMOUNT],
+
       [encodedFunctionCall],
       PROPOSAL_DESCRIPTION
     );
@@ -123,8 +136,7 @@ describe("IF Governance Test", () => {
   });
 
   it("Vote the created proposal", async () => {
-    await IFVotesTokenContract.delegate(signer);
-    await mineBlocks(PROPOSAL_VOTING_DELAY + 1);
+    await time.increase(PROPOSAL_VOTING_DELAY + 1);
 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Active);
@@ -136,7 +148,15 @@ describe("IF Governance Test", () => {
     );
     await voteTx.wait();
 
-    await mineBlocks(PROPOSAL_VOTING_PERIOD + 1);
+    const timeAtVote = await time.latest();
+    await time.increase(PROPOSAL_VOTING_PERIOD + 1);
+
+    const currentQuorum = await IFGovernorContract.quorum(timeAtVote);
+    console.log("currentQuorum:", currentQuorum);
+
+    const currentVotesTokenSupply = await IFVotesTokenContract.totalSupply();
+    console.log("currentVotesTokenSupply:", currentVotesTokenSupply);
+
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Succeeded);
   });
@@ -144,14 +164,20 @@ describe("IF Governance Test", () => {
   it("Queue & Execute the proposal", async () => {
     const descriptionHash = ethers.id(PROPOSAL_DESCRIPTION);
 
+    // The successful proposal needs to be queued manually
+    // The Timelock deplay will start from this moment
     const queueTx = await IFGovernorContract.queue(
       [IFTimelockContract],
+
+      // Specify the {value: ...} for interacting with payable func
+      // Set to 0 for non payable function
       [RECIPIENT_AMOUNT],
+
       [encodedFunctionCall],
       descriptionHash
     );
     await queueTx.wait();
-    await increaseTime(TIME_LOCK_MIN_DELAY + 1);
+    await time.increase(TIME_LOCK_MIN_DELAY + 1);
 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Queued);
@@ -167,7 +193,11 @@ describe("IF Governance Test", () => {
 
     const executeTx = await IFGovernorContract.execute(
       [IFTimelockContract],
+
+      // Specify the {value: ...} for interacting with payable func
+      // Set to 0 for non payable function
       [RECIPIENT_AMOUNT],
+
       [encodedFunctionCall],
       descriptionHash
     );

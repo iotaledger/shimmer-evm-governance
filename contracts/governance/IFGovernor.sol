@@ -173,6 +173,8 @@ contract IFGovernor is
         return super._cancel(targets, values, calldatas, descriptionHash);
     }
 
+    // Specify the EXECUTOR role for the modifier onlyGovernance
+    // Only Timelock has this role
     function _executor()
         internal
         view

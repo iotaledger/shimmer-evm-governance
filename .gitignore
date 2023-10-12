@@ -11,3 +11,5 @@ artifacts
 
 package-lock.json
 yarn.lock
+
+*_merged.sol
