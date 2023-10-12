@@ -52,3 +52,9 @@ The deployed contract addresses are stored in the folder `deployed-contract-addr
 ## Unit-test
 
 `npm run test`
+
+## Notice
+
+- If the proposal is still active, any attempt to queue/execute/cancel it will revert.
+- The proposal can only be cancelled via Governor contract if it is still in voting delay (i.e. not yet active for voting).
+- If proposal passes the voting, it can only be cancelled by the Timelock.

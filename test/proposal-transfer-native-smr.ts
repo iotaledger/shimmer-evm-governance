@@ -17,16 +17,16 @@ import {
 import { getBalanceNative } from "../utils";
 import setupGovernance from "../deploy/setup-governance";
 
-describe("IF Governance Test", () => {
+describe("IF governance test of proposal creation for transferring native SMR", () => {
   let IFGovernorContract: IFGovernor;
   let IFVotesTokenContract: wSMR;
   let IFTimelockContract: IFTimelock;
   let signer: any;
-  let provider: any;
   let PROPOSER_ROLE: string;
   let EXECUTOR_ROLE: string;
   let ADMIN_ROLE: string;
   let PROPOSAL_DESCRIPTION: string;
+  let PROPOSAL_DESCRIPTION_HASH: string;
   let proposalId: string;
   let proposalState: bigint;
   let encodedFunctionCall: string;
@@ -46,9 +46,48 @@ describe("IF Governance Test", () => {
     Executed,
   }
 
+  async function queueProposal() {
+    return IFGovernorContract.queue(
+      [IFTimelockContract],
+
+      // Specify the {value: ...} for interacting with payable func
+      // Set to 0 for non payable function
+      [RECIPIENT_AMOUNT],
+
+      [encodedFunctionCall],
+      PROPOSAL_DESCRIPTION_HASH
+    );
+  }
+
+  async function executeProposal() {
+    return IFGovernorContract.execute(
+      [IFTimelockContract],
+
+      // Specify the {value: ...} for interacting with payable func
+      // Set to 0 for non payable function
+      [RECIPIENT_AMOUNT],
+
+      [encodedFunctionCall],
+      PROPOSAL_DESCRIPTION_HASH
+    );
+  }
+
+  // With Governor, the proposal can only be cancelled if it is still in voting delay (i.e. not yet active for voting).
+  async function cancelProposalWithGovernor() {
+    return IFGovernorContract.cancel(
+      [IFTimelockContract],
+
+      // Specify the {value: ...} for interacting with payable func
+      // Set to 0 for non payable function
+      [RECIPIENT_AMOUNT],
+
+      [encodedFunctionCall],
+      PROPOSAL_DESCRIPTION_HASH
+    );
+  }
+
   it("Deploy governance contracts", async () => {
     [signer] = await ethers.getSigners();
-    provider = await ethers.provider;
     IFVotesTokenContract = await deployIFVotesToken();
     IFTimelockContract = await deployIFTimelock();
     IFGovernorContract = await deployIFGovernor(
@@ -102,6 +141,7 @@ describe("IF Governance Test", () => {
 
   it("Create proposal to transfer native SMR to the specified recipient", async () => {
     PROPOSAL_DESCRIPTION = "My first-ever proposal";
+    PROPOSAL_DESCRIPTION_HASH = ethers.id(PROPOSAL_DESCRIPTION);
 
     // No need to specify {value: ...} when encodeFunctionData
     // because the "value" will be specified when calling the function
@@ -131,15 +171,31 @@ describe("IF Governance Test", () => {
     const logs = receipt?.logs[0] as EventLog;
     proposalId = logs.args[0].toString();
 
-    proposalState = await IFGovernorContract.state(proposalId);
-    expect(proposalState).to.equal(ProposalState.Pending);
+    // No voting delay, no need to check Pending status
+    // proposalState = await IFGovernorContract.state(proposalId);
+    // expect(proposalState).to.equal(ProposalState.Pending);
   });
 
-  it("Vote the created proposal", async () => {
+  it("Vote the created proposal. If proposal still active, any attempt to queue/execute/cancel it will revert.", async () => {
     await time.increase(PROPOSAL_VOTING_DELAY + 1);
 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Active);
+
+    await expect(queueProposal()).to.be.revertedWithCustomError(
+      IFGovernorContract,
+      "GovernorUnexpectedProposalState"
+    );
+
+    await expect(executeProposal()).to.be.revertedWithCustomError(
+      IFGovernorContract,
+      "GovernorUnexpectedProposalState"
+    );
+
+    await expect(cancelProposalWithGovernor()).to.be.revertedWithCustomError(
+      IFGovernorContract,
+      "GovernorUnexpectedProposalState"
+    );
 
     const voteTx = await IFGovernorContract.castVoteWithReason(
       proposalId,
@@ -162,21 +218,13 @@ describe("IF Governance Test", () => {
   });
 
   it("Queue & Execute the proposal", async () => {
-    const descriptionHash = ethers.id(PROPOSAL_DESCRIPTION);
-
     // The successful proposal needs to be queued manually
     // The Timelock deplay will start from this moment
-    const queueTx = await IFGovernorContract.queue(
-      [IFTimelockContract],
-
-      // Specify the {value: ...} for interacting with payable func
-      // Set to 0 for non payable function
-      [RECIPIENT_AMOUNT],
-
-      [encodedFunctionCall],
-      descriptionHash
-    );
+    const queueTx = await queueProposal();
     await queueTx.wait();
+
+    // await cancelProposalWithTimelock();
+
     await time.increase(TIME_LOCK_MIN_DELAY + 1);
 
     proposalState = await IFGovernorContract.state(proposalId);
@@ -191,21 +239,43 @@ describe("IF Governance Test", () => {
     expect(await getBalanceNative(timelockAddress)).to.equal(RECIPIENT_AMOUNT);
     //////
 
-    const executeTx = await IFGovernorContract.execute(
-      [IFTimelockContract],
-
-      // Specify the {value: ...} for interacting with payable func
-      // Set to 0 for non payable function
-      [RECIPIENT_AMOUNT],
-
-      [encodedFunctionCall],
-      descriptionHash
-    );
+    const executeTx = await executeProposal();
     await executeTx.wait();
 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Executed);
     expect(await getBalanceNative(timelockAddress)).to.equal("0");
     expect(await getBalanceNative(RECIPIENT)).to.equal(RECIPIENT_AMOUNT);
+  });
+
+  it("Governance settings change will revert if not via proposal execution", async () => {
+    // The modifier onlyGovernance ensures that only Timelock contract can update Governance settings
+
+    await expect(
+      IFGovernorContract.updateQuorumNumerator(1)
+    ).to.be.revertedWithCustomError(IFGovernorContract, "GovernorOnlyExecutor");
+
+    await expect(
+      IFGovernorContract.setVotingDelay(1)
+    ).to.be.revertedWithCustomError(IFGovernorContract, "GovernorOnlyExecutor");
+
+    await expect(
+      IFGovernorContract.setVotingPeriod(1)
+    ).to.be.revertedWithCustomError(IFGovernorContract, "GovernorOnlyExecutor");
+
+    await expect(
+      IFGovernorContract.setProposalThreshold(1)
+    ).to.be.revertedWithCustomError(IFGovernorContract, "GovernorOnlyExecutor");
+
+    await expect(
+      IFGovernorContract.setLateQuorumVoteExtension(1)
+    ).to.be.revertedWithCustomError(IFGovernorContract, "GovernorOnlyExecutor");
+
+    await expect(
+      IFTimelockContract.updateDelay(1)
+    ).to.be.revertedWithCustomError(
+      IFTimelockContract,
+      "TimelockUnauthorizedCaller"
+    );
   });
 });
