@@ -1,5 +1,5 @@
 // Minimum delay in seconds for operations after the proposal passes
-export const TIME_LOCK_MIN_DELAY = 3600; // 1 hour
+export const TIME_LOCK_MIN_DELAY = 0; // 1 hour
 
 // ADMIN_ROLE of Timelock contract will be under this specified multisig wallet
 export const TIME_LOCK_ADMIN_MULTISIG =

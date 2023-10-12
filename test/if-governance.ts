@@ -1,16 +1,9 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { EventLog } from "ethers";
-import { Contract } from "web3-eth-contract";
-import {
-  IFGovernor,
-  wSMR,
-  CustomActionContract,
-  IFTimelock,
-} from "../typechain-types";
+import { IFGovernor, wSMR, IFTimelock } from "../typechain-types";
 import deployIFGovernor from "../deploy/if-governor";
 import deployIFVotesToken from "../deploy/if-votes-token";
-import deployCustomActionContract from "../deploy/custom-action-contract";
 import deployIFTimelock from "../deploy/if-timelock";
 import { ADDRESS_ZERO } from "../utils/constants";
 import {
@@ -20,14 +13,13 @@ import {
   PROPOSAL_VOTING_DELAY,
   PROPOSAL_VOTING_PERIOD,
 } from "../configuration";
-import { increaseTime, mineBlocks } from "../utils";
+import { getBalanceNative, increaseTime, mineBlocks } from "../utils";
 import setupGovernance from "../deploy/setup-governance";
 
 describe("IF Governance Test", () => {
   let IFGovernorContract: IFGovernor;
   let IFVotesTokenContract: wSMR;
   let IFTimelockContract: IFTimelock;
-  let erc20TokenContract: CustomActionContract;
   let signer: any;
   let provider: any;
   let PROPOSER_ROLE: string;
@@ -38,8 +30,7 @@ describe("IF Governance Test", () => {
   let proposalState: bigint;
   let encodedFunctionCall: string;
   const voteOption = 1; // for
-  const voteReason = "some powerful reason";
-  const SET_VALUE = 333;
+  const voteReason = "good reason";
   const RECIPIENT = "0x57bA4DBea3198e48af45117e93e2abb9822BEA48";
   const RECIPIENT_AMOUNT = "1000000"; // 1 SMR
 
@@ -63,7 +54,6 @@ describe("IF Governance Test", () => {
       IFVotesTokenContract,
       IFTimelockContract
     );
-    erc20TokenContract = await deployCustomActionContract(IFTimelockContract);
   });
 
   it("Setup governance", async () => {
@@ -112,41 +102,14 @@ describe("IF Governance Test", () => {
   it("Create proposal to transfer native SMR to the specified recipient", async () => {
     PROPOSAL_DESCRIPTION = "My first-ever proposal";
 
-    // Contract via ethers lib cannot encodeFunctionData for payable function
-    // encodedFunctionCall = IFTimelockContract.interface.encodeFunctionData(
-    //   "transferNativeSMR",
-    //   [RECIPIENT]
-    // );
-
-    const timelockAddress = await (IFTimelockContract as any).getAddress();
-    const myContract = new Contract(
-      [
-        {
-          inputs: [
-            {
-              internalType: "address payable",
-              name: "recipient",
-              type: "address",
-            },
-          ],
-          name: "transferNativeSMR",
-          outputs: [],
-          stateMutability: "payable",
-          type: "function",
-        },
-      ] as any,
-      timelockAddress
+    encodedFunctionCall = IFTimelockContract.interface.encodeFunctionData(
+      "transferNativeSMR",
+      [RECIPIENT]
     );
-
-    encodedFunctionCall = myContract.methods
-      .transferNativeSMR(RECIPIENT, { value: RECIPIENT_AMOUNT })
-      .encodeABI();
-
-    console.log("encodedFunctionCall:", encodedFunctionCall);
 
     const proposeTx = await IFGovernorContract.propose(
       [IFTimelockContract],
-      [0],
+      [RECIPIENT_AMOUNT],
       [encodedFunctionCall],
       PROPOSAL_DESCRIPTION
     );
@@ -182,8 +145,8 @@ describe("IF Governance Test", () => {
     const descriptionHash = ethers.id(PROPOSAL_DESCRIPTION);
 
     const queueTx = await IFGovernorContract.queue(
-      [erc20TokenContract],
-      [0],
+      [IFTimelockContract],
+      [RECIPIENT_AMOUNT],
       [encodedFunctionCall],
       descriptionHash
     );
@@ -199,14 +162,12 @@ describe("IF Governance Test", () => {
       to: timelockAddress,
       value: RECIPIENT_AMOUNT,
     });
-    expect(await provider.getBalance(timelockAddress)).to.equal(
-      RECIPIENT_AMOUNT
-    );
+    expect(await getBalanceNative(timelockAddress)).to.equal(RECIPIENT_AMOUNT);
     //////
 
     const executeTx = await IFGovernorContract.execute(
-      [erc20TokenContract],
-      [0],
+      [IFTimelockContract],
+      [RECIPIENT_AMOUNT],
       [encodedFunctionCall],
       descriptionHash
     );
@@ -214,6 +175,7 @@ describe("IF Governance Test", () => {
 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Executed);
-    expect(await erc20TokenContract.getPrice()).to.equal(SET_VALUE);
+    expect(await getBalanceNative(timelockAddress)).to.equal("0");
+    expect(await getBalanceNative(RECIPIENT)).to.equal(RECIPIENT_AMOUNT);
   });
 });
