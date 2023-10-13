@@ -17,7 +17,7 @@ import {
 import { getBalanceNative, toWei } from "../utils";
 import setupGovernance from "../deploy/setup-governance";
 
-describe("IF governance test of proposal creation for transferring native SMR", () => {
+describe("IF governance test of proposal creation for changing governance settings", () => {
   let IFGovernorContract: IFGovernor;
   let IFVotesTokenContract: wSMR;
   let IFTimelockContract: IFTimelock;
@@ -32,7 +32,9 @@ describe("IF governance test of proposal creation for transferring native SMR", 
   let PROPOSAL_DESCRIPTION_HASH: string;
   let proposalId: string;
   let proposalState: bigint;
-  let encodedFunctionCall: string;
+  let encodedFunctionCall: string[];
+  let targetContract: any[];
+  let values: number[];
   const voteOption = 1; // for
   const voteReason = "good reason";
   const RECIPIENT_NATIVE_SMR = "0x57bA4DBea3198e48af45117e93e2abb9822BEA48";
@@ -41,6 +43,13 @@ describe("IF governance test of proposal creation for transferring native SMR", 
   const VOTER_2_NATIVE_SMR_AMOUNT = 3;
   const VOTER_3_NATIVE_SMR_AMOUNT = 5;
   const TOTAL_SUPPLY_wSMR = 10;
+
+  const newTimelockDelay = 2 * 60 * 60; // 2 hour
+  const newProposalVotingDelay = 1 * 24 * 60 * 60; // 1 days
+  const newProposalVotingPeriod = 5 * 24 * 60 * 60; // 5 days
+  const newQuorumFixedAmount = 6; // 6 wSMR
+  const newProposalThreshold = 1; // 1 wSMR
+  const newLateQuorumExtension = 48 * 60 * 60; // 48 hours
 
   enum ProposalState {
     Pending,
@@ -55,26 +64,24 @@ describe("IF governance test of proposal creation for transferring native SMR", 
 
   async function queueProposal() {
     return IFGovernorContract.queue(
-      [IFTimelockContract],
+      targetContract,
 
-      // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      [RECIPIENT_NATIVE_SMR_AMOUNT],
+      values,
 
-      [encodedFunctionCall],
+      [...encodedFunctionCall],
       PROPOSAL_DESCRIPTION_HASH
     );
   }
 
   async function executeProposal() {
     return IFGovernorContract.execute(
-      [IFTimelockContract],
+      targetContract,
 
-      // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      [RECIPIENT_NATIVE_SMR_AMOUNT],
+      values,
 
-      [encodedFunctionCall],
+      [...encodedFunctionCall],
       PROPOSAL_DESCRIPTION_HASH
     );
   }
@@ -82,13 +89,12 @@ describe("IF governance test of proposal creation for transferring native SMR", 
   // With Governor, the proposal can only be cancelled if it is still in voting delay (i.e. not yet active for voting).
   async function cancelProposalWithGovernor() {
     return IFGovernorContract.cancel(
-      [IFTimelockContract],
+      targetContract,
 
-      // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      [RECIPIENT_NATIVE_SMR_AMOUNT],
+      values,
 
-      [encodedFunctionCall],
+      [...encodedFunctionCall],
       PROPOSAL_DESCRIPTION_HASH
     );
   }
@@ -159,17 +165,42 @@ describe("IF governance test of proposal creation for transferring native SMR", 
     );
   });
 
-  it("Create proposal to transfer native SMR to the specified RECIPIENT_NATIVE_SMR", async () => {
-    PROPOSAL_DESCRIPTION = "My first-ever proposal";
+  it("Create proposal to change governance settings including timelock delay, quorum fixed amount, voting period, voting delay, proposal threshold and late quorum extension", async () => {
+    PROPOSAL_DESCRIPTION = "My second proposal";
     PROPOSAL_DESCRIPTION_HASH = ethers.id(PROPOSAL_DESCRIPTION);
 
-    // No need to specify {value: ...} when encodeFunctionData
-    // because the "value" will be specified when calling the function
-    // propose(), queue() and execute() of Governor contract
-    encodedFunctionCall = IFTimelockContract.interface.encodeFunctionData(
-      "transferNativeSMR",
-      [RECIPIENT_NATIVE_SMR]
-    );
+    encodedFunctionCall = [
+      IFTimelockContract.interface.encodeFunctionData("updateDelay", [
+        newTimelockDelay,
+      ]),
+      IFGovernorContract.interface.encodeFunctionData("setQuorumFixedAmount", [
+        newQuorumFixedAmount,
+      ]),
+      IFGovernorContract.interface.encodeFunctionData("setVotingPeriod", [
+        newProposalVotingPeriod,
+      ]),
+      IFGovernorContract.interface.encodeFunctionData("setVotingDelay", [
+        newProposalVotingDelay,
+      ]),
+      IFGovernorContract.interface.encodeFunctionData("setProposalThreshold", [
+        newProposalThreshold,
+      ]),
+      IFGovernorContract.interface.encodeFunctionData(
+        "setLateQuorumVoteExtension",
+        [newLateQuorumExtension]
+      ),
+    ];
+
+    targetContract = [
+      IFTimelockContract,
+      IFGovernorContract,
+      IFGovernorContract,
+      IFGovernorContract,
+      IFGovernorContract,
+      IFGovernorContract,
+    ];
+
+    values = [0, 0, 0, 0, 0, 0];
 
     // Because of no voting delay, once created, the proposal voting will start immediately
     // Thus, the voting power snapshot is also performed immediately
@@ -178,13 +209,12 @@ describe("IF governance test of proposal creation for transferring native SMR", 
     await IFVotesTokenContract.connect(voter2).delegate(voter2);
 
     const proposeTx = await IFGovernorContract.propose(
-      [IFTimelockContract],
+      targetContract,
 
-      // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      [RECIPIENT_NATIVE_SMR_AMOUNT],
+      values,
 
-      [encodedFunctionCall],
+      [...encodedFunctionCall],
       PROPOSAL_DESCRIPTION
     );
 
@@ -258,26 +288,12 @@ describe("IF governance test of proposal creation for transferring native SMR", 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Queued);
 
-    // Fund native SMR for the Timelock
-    const timelockAddress = await (IFTimelockContract as any).getAddress();
-    await signer.sendTransaction({
-      to: timelockAddress,
-      value: RECIPIENT_NATIVE_SMR_AMOUNT,
-    });
-    expect(await getBalanceNative(timelockAddress)).to.equal(
-      RECIPIENT_NATIVE_SMR_AMOUNT
-    );
-    //////
-
     const executeTx = await executeProposal();
     await executeTx.wait();
 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Executed);
-    expect(await getBalanceNative(timelockAddress)).to.equal("0");
-    expect(await getBalanceNative(RECIPIENT_NATIVE_SMR)).to.equal(
-      RECIPIENT_NATIVE_SMR_AMOUNT
-    );
+    expect(await IFTimelockContract.getMinDelay()).to.equal(newTimelockDelay);
   });
 
   it("Governance settings change will revert if not via proposal execution", async () => {

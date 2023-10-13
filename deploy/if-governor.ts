@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 import { IFGovernor, wSMR, IFTimelock } from "../typechain-types";
 import {
   PROPOSAL_QUORUM_FIXED_AMOUNT,
@@ -24,10 +24,12 @@ async function deployIFGovernor(
   ]);
   await IFGovernorContract.waitForDeployment();
 
-  console.log(
-    "IFGovernorContract address:",
-    await IFGovernorContract.getAddress()
-  );
+  if (network.name !== "hardhat") {
+    console.log(
+      "IFGovernorContract address:",
+      await IFGovernorContract.getAddress()
+    );
+  }
 
   return IFGovernorContract;
 }

@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 import { CustomActionContract, IFTimelock } from "../typechain-types";
 
 async function deployCustomActionContract(
@@ -11,10 +11,12 @@ async function deployCustomActionContract(
   );
   await deployedCustomActionContract.waitForDeployment();
 
-  console.log(
-    "CustomActionContract address:",
-    await deployedCustomActionContract.getAddress()
-  );
+  if (network.name !== "hardhat") {
+    console.log(
+      "CustomActionContract address:",
+      await deployedCustomActionContract.getAddress()
+    );
+  }
 
   const OPERATOR_ROLE = await deployedCustomActionContract.OPERATOR_ROLE();
   const DEFAULT_ADMIN_ROLE =

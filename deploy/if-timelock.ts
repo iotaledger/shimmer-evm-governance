@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 import { IFTimelock } from "../typechain-types";
 import { TIME_LOCK_MIN_DELAY } from "../configuration";
 
@@ -13,10 +13,12 @@ async function deployIFTimelock(): Promise<IFTimelock> {
   ]);
   await IFTimelockContract.waitForDeployment();
 
-  console.log(
-    "IFTimelockContract address:",
-    await IFTimelockContract.getAddress()
-  );
+  if (network.name !== "hardhat") {
+    console.log(
+      "IFTimelockContract address:",
+      await IFTimelockContract.getAddress()
+    );
+  }
 
   return IFTimelockContract;
 }
