@@ -1,12 +1,13 @@
 import { ethers } from "hardhat";
 import { IFGovernor, wSMR, IFTimelock } from "../typechain-types";
 import {
-  PROPOSAL_QUORUM_PERCENT,
+  PROPOSAL_QUORUM_FIXED_AMOUNT,
   PROPOSAL_VOTING_PERIOD,
   PROPOSAL_VOTING_DELAY,
   PROPOSAL_THRESHOLD,
   PROPOSAL_LATE_QUORUM_EXTENSION,
 } from "../configuration";
+import { toWei } from "../utils";
 
 async function deployIFGovernor(
   IFVotesTokenContract: wSMR,
@@ -19,7 +20,7 @@ async function deployIFGovernor(
     PROPOSAL_VOTING_PERIOD,
     PROPOSAL_THRESHOLD,
     PROPOSAL_LATE_QUORUM_EXTENSION,
-    PROPOSAL_QUORUM_PERCENT,
+    toWei(PROPOSAL_QUORUM_FIXED_AMOUNT),
   ]);
   await IFGovernorContract.waitForDeployment();
 

@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/governance/Governor.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorPreventLateQuorum.sol";
 
@@ -15,25 +14,63 @@ contract IFGovernor is
     GovernorSettings,
     GovernorPreventLateQuorum,
     GovernorCountingSimple,
-    GovernorVotesQuorumFraction,
     GovernorTimelockControl
 {
+    // This is to replace the quorum (of the GovernorVotesQuorumFraction)
+    // in percentage of the total supply of wSMR tokens
+    // with the quorum in fixed amount of wSMR tokens
+    uint256 private _quorumFixedAmount;
+
+    event QuorumFixedAmountSet(
+        uint256 oldQuorumFixedAmount,
+        uint256 newQuorumFixedAmount
+    );
+
     constructor(
-        IVotes _token,
-        TimelockController _timelock,
-        uint48 _votingDelay,
-        uint32 _votingPeriod,
-        uint256 _proposalThreshold,
-        uint48 _lateQuorumExtension,
-        uint256 _quorumPercentage
+        IVotes _token_,
+        TimelockController _timelock_,
+        uint48 _votingDelay_,
+        uint32 _votingPeriod_,
+        uint256 _proposalThreshold_,
+        uint48 _lateQuorumExtension_,
+        uint256 _quorumFixedAmount_
     )
         Governor("IFGovernor")
-        GovernorVotes(_token)
-        GovernorSettings(_votingDelay, _votingPeriod, _proposalThreshold)
-        GovernorPreventLateQuorum(_lateQuorumExtension)
-        GovernorVotesQuorumFraction(_quorumPercentage)
-        GovernorTimelockControl(_timelock)
-    {}
+        GovernorVotes(_token_)
+        GovernorSettings(_votingDelay_, _votingPeriod_, _proposalThreshold_)
+        GovernorPreventLateQuorum(_lateQuorumExtension_)
+        GovernorTimelockControl(_timelock_)
+    {
+        _setQuorumFixedAmount(_quorumFixedAmount_);
+    }
+
+    /**
+     * @dev Internal setter for the quorum in fixed amount.
+     *
+     * Emits a {QuorumFixedAmountSet} event.
+     */
+    function _setQuorumFixedAmount(uint256 newQuorumFixedAmount) internal {
+        emit QuorumFixedAmountSet(_quorumFixedAmount, newQuorumFixedAmount);
+        _quorumFixedAmount = newQuorumFixedAmount;
+    }
+
+    /**
+     * @dev Update the quorum in fixed amount. This operation can only be performed through a governance proposal.
+     *
+     * Emits a {QuorumFixedAmountSet} event.
+     */
+    function setQuorumFixedAmount(
+        uint256 newQuorumFixedAmount
+    ) public onlyGovernance {
+        _setQuorumFixedAmount(newQuorumFixedAmount);
+    }
+
+    function quorum(
+        uint256 timepoint
+    ) public view override(Governor) returns (uint256) {
+        timepoint; // avoid warning for dummy param
+        return _quorumFixedAmount;
+    }
 
     // The following functions are overrides required by Solidity.
 
@@ -81,17 +118,6 @@ contract IFGovernor is
         returns (uint256)
     {
         return super.votingPeriod();
-    }
-
-    function quorum(
-        uint256 blockNumber
-    )
-        public
-        view
-        override(Governor, GovernorVotesQuorumFraction)
-        returns (uint256)
-    {
-        return super.quorum(blockNumber);
     }
 
     function state(

@@ -10,11 +10,11 @@ import { ADDRESS_ZERO } from "../utils/constants";
 import {
   TIME_LOCK_MIN_DELAY,
   PROPOSAL_THRESHOLD,
-  PROPOSAL_QUORUM_PERCENT,
+  PROPOSAL_QUORUM_FIXED_AMOUNT,
   PROPOSAL_VOTING_DELAY,
   PROPOSAL_VOTING_PERIOD,
 } from "../configuration";
-import { getBalanceNative } from "../utils";
+import { getBalanceNative, toWei } from "../utils";
 import setupGovernance from "../deploy/setup-governance";
 
 describe("IF governance test of proposal creation for transferring native SMR", () => {
@@ -22,6 +22,9 @@ describe("IF governance test of proposal creation for transferring native SMR", 
   let IFVotesTokenContract: wSMR;
   let IFTimelockContract: IFTimelock;
   let signer: any;
+  let voter1: any;
+  let voter2: any;
+  let voter3: any;
   let PROPOSER_ROLE: string;
   let EXECUTOR_ROLE: string;
   let ADMIN_ROLE: string;
@@ -32,8 +35,12 @@ describe("IF governance test of proposal creation for transferring native SMR", 
   let encodedFunctionCall: string;
   const voteOption = 1; // for
   const voteReason = "good reason";
-  const RECIPIENT = "0x57bA4DBea3198e48af45117e93e2abb9822BEA48";
-  const RECIPIENT_AMOUNT = "1000000"; // 1 SMR
+  const RECIPIENT_NATIVE_SMR = "0x57bA4DBea3198e48af45117e93e2abb9822BEA48";
+  const RECIPIENT_NATIVE_SMR_AMOUNT = 1; // 1 SMR
+  const VOTER_1_NATIVE_SMR_AMOUNT = 2;
+  const VOTER_2_NATIVE_SMR_AMOUNT = 3;
+  const VOTER_3_NATIVE_SMR_AMOUNT = 5;
+  const TOTAL_SUPPLY_wSMR = 10;
 
   enum ProposalState {
     Pending,
@@ -52,7 +59,7 @@ describe("IF governance test of proposal creation for transferring native SMR", 
 
       // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      [RECIPIENT_AMOUNT],
+      [RECIPIENT_NATIVE_SMR_AMOUNT],
 
       [encodedFunctionCall],
       PROPOSAL_DESCRIPTION_HASH
@@ -65,7 +72,7 @@ describe("IF governance test of proposal creation for transferring native SMR", 
 
       // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      [RECIPIENT_AMOUNT],
+      [RECIPIENT_NATIVE_SMR_AMOUNT],
 
       [encodedFunctionCall],
       PROPOSAL_DESCRIPTION_HASH
@@ -79,7 +86,7 @@ describe("IF governance test of proposal creation for transferring native SMR", 
 
       // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      [RECIPIENT_AMOUNT],
+      [RECIPIENT_NATIVE_SMR_AMOUNT],
 
       [encodedFunctionCall],
       PROPOSAL_DESCRIPTION_HASH
@@ -87,7 +94,7 @@ describe("IF governance test of proposal creation for transferring native SMR", 
   }
 
   it("Deploy governance contracts", async () => {
-    [signer] = await ethers.getSigners();
+    [signer, voter1, voter2, voter3] = await ethers.getSigners();
     IFVotesTokenContract = await deployIFVotesToken();
     IFTimelockContract = await deployIFTimelock();
     IFGovernorContract = await deployIFGovernor(
@@ -114,19 +121,32 @@ describe("IF governance test of proposal creation for transferring native SMR", 
     expect(await IFTimelockContract.hasRole(ADMIN_ROLE, signer)).to.be.false;
   });
 
-  it("Verify wSMR contract property", async () => {
+  it("Verify wSMR total supply after users have deposited", async () => {
     expect(await IFVotesTokenContract.name()).to.equal("wSMR");
     expect(await IFVotesTokenContract.symbol()).to.equal("wSMR");
     expect(await IFVotesTokenContract.totalSupply()).to.equal("0");
 
-    // Get wSMR by depositing native SMR
-    await IFVotesTokenContract.deposit({ value: RECIPIENT_AMOUNT });
-    expect(await IFVotesTokenContract.totalSupply()).to.equal(RECIPIENT_AMOUNT);
+    // Voter1 gets wSMR by depositing native SMR
+    await IFVotesTokenContract.connect(voter1).deposit({
+      value: toWei(VOTER_1_NATIVE_SMR_AMOUNT),
+    });
+    // Voter2 gets wSMR by depositing native SMR
+    await IFVotesTokenContract.connect(voter2).deposit({
+      value: toWei(VOTER_2_NATIVE_SMR_AMOUNT),
+    });
+    // Voter3 gets wSMR by depositing native SMR
+    await IFVotesTokenContract.connect(voter3).deposit({
+      value: toWei(VOTER_3_NATIVE_SMR_AMOUNT),
+    });
+
+    expect(await IFVotesTokenContract.totalSupply()).to.equal(
+      toWei(TOTAL_SUPPLY_wSMR)
+    );
   });
 
   it("Verify IFGovernor contract property", async () => {
-    expect(await IFGovernorContract["quorumNumerator()"]()).to.equal(
-      PROPOSAL_QUORUM_PERCENT
+    expect(await IFGovernorContract.quorum(1)).to.equal(
+      toWei(PROPOSAL_QUORUM_FIXED_AMOUNT)
     );
     expect(await IFGovernorContract.votingDelay()).to.equal(
       PROPOSAL_VOTING_DELAY
@@ -139,7 +159,7 @@ describe("IF governance test of proposal creation for transferring native SMR", 
     );
   });
 
-  it("Create proposal to transfer native SMR to the specified recipient", async () => {
+  it("Create proposal to transfer native SMR to the specified RECIPIENT_NATIVE_SMR", async () => {
     PROPOSAL_DESCRIPTION = "My first-ever proposal";
     PROPOSAL_DESCRIPTION_HASH = ethers.id(PROPOSAL_DESCRIPTION);
 
@@ -148,20 +168,21 @@ describe("IF governance test of proposal creation for transferring native SMR", 
     // propose(), queue() and execute() of Governor contract
     encodedFunctionCall = IFTimelockContract.interface.encodeFunctionData(
       "transferNativeSMR",
-      [RECIPIENT]
+      [RECIPIENT_NATIVE_SMR]
     );
 
-    // Because of voting delay, once created, the proposal voting will start immediately
+    // Because of no voting delay, once created, the proposal voting will start immediately
     // Thus, the voting power snapshot is also performed immediately
     // Meaning that, the users need to delegate for voting power before the proposal creation
-    await IFVotesTokenContract.delegate(signer);
+    await IFVotesTokenContract.connect(voter1).delegate(voter1);
+    await IFVotesTokenContract.connect(voter2).delegate(voter2);
 
     const proposeTx = await IFGovernorContract.propose(
       [IFTimelockContract],
 
       // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      [RECIPIENT_AMOUNT],
+      [RECIPIENT_NATIVE_SMR_AMOUNT],
 
       [encodedFunctionCall],
       PROPOSAL_DESCRIPTION
@@ -197,13 +218,20 @@ describe("IF governance test of proposal creation for transferring native SMR", 
       "GovernorUnexpectedProposalState"
     );
 
-    const voteTx = await IFGovernorContract.castVoteWithReason(
+    // Voters vote
+    await IFGovernorContract.connect(voter1).castVoteWithReason(
       proposalId,
       voteOption,
       voteReason
     );
-    await voteTx.wait();
 
+    await IFGovernorContract.connect(voter2).castVoteWithReason(
+      proposalId,
+      voteOption,
+      voteReason
+    );
+
+    // Voting period over
     const timeAtVote = await time.latest();
     await time.increase(PROPOSAL_VOTING_PERIOD + 1);
 
@@ -234,9 +262,11 @@ describe("IF governance test of proposal creation for transferring native SMR", 
     const timelockAddress = await (IFTimelockContract as any).getAddress();
     await signer.sendTransaction({
       to: timelockAddress,
-      value: RECIPIENT_AMOUNT,
+      value: RECIPIENT_NATIVE_SMR_AMOUNT,
     });
-    expect(await getBalanceNative(timelockAddress)).to.equal(RECIPIENT_AMOUNT);
+    expect(await getBalanceNative(timelockAddress)).to.equal(
+      RECIPIENT_NATIVE_SMR_AMOUNT
+    );
     //////
 
     const executeTx = await executeProposal();
@@ -245,14 +275,16 @@ describe("IF governance test of proposal creation for transferring native SMR", 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Executed);
     expect(await getBalanceNative(timelockAddress)).to.equal("0");
-    expect(await getBalanceNative(RECIPIENT)).to.equal(RECIPIENT_AMOUNT);
+    expect(await getBalanceNative(RECIPIENT_NATIVE_SMR)).to.equal(
+      RECIPIENT_NATIVE_SMR_AMOUNT
+    );
   });
 
   it("Governance settings change will revert if not via proposal execution", async () => {
     // The modifier onlyGovernance ensures that only Timelock contract can update Governance settings
 
     await expect(
-      IFGovernorContract.updateQuorumNumerator(1)
+      IFGovernorContract.setQuorumFixedAmount(1)
     ).to.be.revertedWithCustomError(IFGovernorContract, "GovernorOnlyExecutor");
 
     await expect(

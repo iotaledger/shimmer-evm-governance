@@ -6,7 +6,7 @@ export const TIME_LOCK_ADMIN_MULTISIG =
   "0x57bA4DBea3198e48af45117e93e2abb9822BEA48";
 
 // Governor Values
-export const PROPOSAL_QUORUM_PERCENT = 1; // need 4% of voters to pass
+export const PROPOSAL_QUORUM_FIXED_AMOUNT = 5; // 5 wSMR tokens (18 decimals)
 export const PROPOSAL_VOTING_PERIOD = 7 * 24 * 60 * 60; // 7 days
 // No voting delay so that snapshot happens immediately
 // This requires the users to delegate for voting power before the proposal is created
