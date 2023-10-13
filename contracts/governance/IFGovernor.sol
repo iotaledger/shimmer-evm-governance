@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol
 import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorPreventLateQuorum.sol";
+import "./IFGovernorQuorumFixedAmount.sol";
 
 contract IFGovernor is
     Governor,
@@ -14,18 +15,9 @@ contract IFGovernor is
     GovernorSettings,
     GovernorPreventLateQuorum,
     GovernorCountingSimple,
-    GovernorTimelockControl
+    GovernorTimelockControl,
+    IFGovernorQuorumFixedAmount
 {
-    // This is to replace the quorum (of the GovernorVotesQuorumFraction)
-    // in percentage of the total supply of wSMR tokens
-    // with the quorum in fixed amount of wSMR tokens
-    uint256 private _quorumFixedAmount;
-
-    event QuorumFixedAmountSet(
-        uint256 oldQuorumFixedAmount,
-        uint256 newQuorumFixedAmount
-    );
-
     constructor(
         IVotes _token_,
         TimelockController _timelock_,
@@ -40,30 +32,8 @@ contract IFGovernor is
         GovernorSettings(_votingDelay_, _votingPeriod_, _proposalThreshold_)
         GovernorPreventLateQuorum(_lateQuorumExtension_)
         GovernorTimelockControl(_timelock_)
-    {
-        _setQuorumFixedAmount(_quorumFixedAmount_);
-    }
-
-    /**
-     * @dev Internal setter for the quorum in fixed amount.
-     *
-     * Emits a {QuorumFixedAmountSet} event.
-     */
-    function _setQuorumFixedAmount(uint256 newQuorumFixedAmount) internal {
-        emit QuorumFixedAmountSet(_quorumFixedAmount, newQuorumFixedAmount);
-        _quorumFixedAmount = newQuorumFixedAmount;
-    }
-
-    /**
-     * @dev Update the quorum in fixed amount. This operation can only be performed through a governance proposal.
-     *
-     * Emits a {QuorumFixedAmountSet} event.
-     */
-    function setQuorumFixedAmount(
-        uint256 newQuorumFixedAmount
-    ) public onlyGovernance {
-        _setQuorumFixedAmount(newQuorumFixedAmount);
-    }
+        IFGovernorQuorumFixedAmount(_quorumFixedAmount_)
+    {}
 
     function quorum(
         uint256 timepoint
