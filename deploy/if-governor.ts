@@ -24,7 +24,9 @@ async function deployIFGovernor(
     PROPOSAL_VOTING_PERIOD,
     PROPOSAL_THRESHOLD,
     PROPOSAL_LATE_QUORUM_EXTENSION,
-    toWei(PROPOSAL_QUORUM_FIXED_AMOUNT),
+    network.name !== "hardhat"
+      ? toWei(PROPOSAL_QUORUM_FIXED_AMOUNT)
+      : toWei(45), // for unit-test with hardhat network
     network.name !== "hardhat"
       ? [PROPOSER_1_MULTISIG, PROPOSER_2_MULTISIG]
       : [deployer.address], // for unit-test with hardhat network

@@ -4,7 +4,7 @@ import { EventLog } from "ethers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { IFGovernor, wSMR, IFTimelock } from "../typechain-types";
 import deployIFGovernor from "../deploy/if-governor";
-import deployIFVotesToken from "../deploy/if-votes-token";
+import deployIFVotesToken from "../deploy/wSMR-token";
 import deployIFTimelock from "../deploy/if-timelock";
 import { ADDRESS_ZERO } from "../utils/constants";
 import {
@@ -37,10 +37,10 @@ describe("IF governance test of proposal creation for transferring native SMR", 
   const voteReason = "good reason";
   const RECIPIENT_NATIVE_SMR = "0x57bA4DBea3198e48af45117e93e2abb9822BEA48";
   const RECIPIENT_NATIVE_SMR_AMOUNT = 1; // 1 SMR
-  const VOTER_1_NATIVE_SMR_AMOUNT = 2;
-  const VOTER_2_NATIVE_SMR_AMOUNT = 3;
-  const VOTER_3_NATIVE_SMR_AMOUNT = 5;
-  const TOTAL_SUPPLY_wSMR = 10;
+  const VOTER_1_NATIVE_SMR_AMOUNT = 40;
+  const VOTER_2_NATIVE_SMR_AMOUNT = 5;
+  const VOTER_3_NATIVE_SMR_AMOUNT = 45;
+  const TOTAL_SUPPLY_wSMR = 90;
 
   enum ProposalState {
     Pending,
@@ -146,7 +146,8 @@ describe("IF governance test of proposal creation for transferring native SMR", 
 
   it("Verify IFGovernor contract property", async () => {
     expect(await IFGovernorContract.quorum(1)).to.equal(
-      toWei(PROPOSAL_QUORUM_FIXED_AMOUNT)
+      // toWei(PROPOSAL_QUORUM_FIXED_AMOUNT)
+      toWei(45) // for unit-test, quorum in fixed amount is set to be 45 when deploying the Governor
     );
     expect(await IFGovernorContract.votingDelay()).to.equal(
       PROPOSAL_VOTING_DELAY

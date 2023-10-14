@@ -3,7 +3,7 @@ import { network } from "hardhat";
 import * as fs from "fs";
 import * as path from "path";
 import deployIFGovernor from "../deploy/if-governor";
-import deployIFVotesToken from "../deploy/if-votes-token";
+import deployWSMRToken from "../deploy/wSMR-token";
 import deployIFTimelock from "../deploy/if-timelock";
 import setupGovernance from "../deploy/setup-governance";
 
@@ -42,7 +42,7 @@ async function storeDeployedContractAddressList(
 
 async function main() {
   // Deploy contracts
-  const deployedIFVotesTokenContract = await deployIFVotesToken();
+  const deployedIFVotesTokenContract = await deployWSMRToken();
   const deployedIFTimelockContract = await deployIFTimelock();
   const deployedIFGovernorContract = await deployIFGovernor(
     deployedIFVotesTokenContract,
