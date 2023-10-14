@@ -6,6 +6,8 @@ import {
   PROPOSAL_VOTING_DELAY,
   PROPOSAL_THRESHOLD,
   PROPOSAL_LATE_QUORUM_EXTENSION,
+  PROPOSER_1_MULTISIG,
+  PROPOSER_2_MULTISIG,
 } from "../configuration";
 import { toWei } from "../utils";
 
@@ -13,6 +15,8 @@ async function deployIFGovernor(
   IFVotesTokenContract: wSMR,
   IFTimelockContract: IFTimelock
 ): Promise<IFGovernor> {
+  const [deployer] = await ethers.getSigners();
+
   const IFGovernorContract = await ethers.deployContract("IFGovernor", [
     IFVotesTokenContract,
     IFTimelockContract,
@@ -21,6 +25,9 @@ async function deployIFGovernor(
     PROPOSAL_THRESHOLD,
     PROPOSAL_LATE_QUORUM_EXTENSION,
     toWei(PROPOSAL_QUORUM_FIXED_AMOUNT),
+    network.name !== "hardhat"
+      ? [PROPOSER_1_MULTISIG, PROPOSER_2_MULTISIG]
+      : [deployer.address], // for unit-test with hardhat network
   ]);
   await IFGovernorContract.waitForDeployment();
 

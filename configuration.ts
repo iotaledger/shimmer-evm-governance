@@ -5,6 +5,10 @@ export const TIME_LOCK_MIN_DELAY = 1 * 60 * 60; // 1 hour
 export const TIME_LOCK_ADMIN_MULTISIG =
   "0x57bA4DBea3198e48af45117e93e2abb9822BEA48";
 
+// Multisig address that can create the proposals
+export const PROPOSER_1_MULTISIG = "0x57A4bD139Fb673D364A6f12Df9177A3f686625F3";
+export const PROPOSER_2_MULTISIG = "0x5e812d3128D8fD7CEac08CEca1Cd879E76a6E028";
+
 // Governor Values
 export const PROPOSAL_QUORUM_FIXED_AMOUNT = 5; // 5 wSMR tokens (18 decimals)
 export const PROPOSAL_VOTING_PERIOD = 7 * 24 * 60 * 60; // 7 days

@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorPreventLateQuorum.sol";
 import "./IFGovernorQuorumFixedAmount.sol";
+import "./IFGovernorWhitelist.sol";
 
 contract IFGovernor is
     Governor,
@@ -16,7 +17,8 @@ contract IFGovernor is
     GovernorPreventLateQuorum,
     GovernorCountingSimple,
     GovernorTimelockControl,
-    IFGovernorQuorumFixedAmount
+    IFGovernorQuorumFixedAmount,
+    IFGovernorWhitelist
 {
     constructor(
         IVotes _token_,
@@ -25,7 +27,8 @@ contract IFGovernor is
         uint32 _votingPeriod_,
         uint256 _proposalThreshold_,
         uint48 _lateQuorumExtension_,
-        uint256 _quorumFixedAmount_
+        uint256 _quorumFixedAmount_,
+        address[] memory _whitelistAddressList_
     )
         Governor("IFGovernor")
         GovernorVotes(_token_)
@@ -33,6 +36,7 @@ contract IFGovernor is
         GovernorPreventLateQuorum(_lateQuorumExtension_)
         GovernorTimelockControl(_timelock_)
         IFGovernorQuorumFixedAmount(_quorumFixedAmount_)
+        IFGovernorWhitelist(_whitelistAddressList_)
     {}
 
     function quorum(
@@ -123,6 +127,9 @@ contract IFGovernor is
         string memory description,
         address proposer
     ) internal override(Governor) returns (uint256) {
+        if (!isWhitelisted(proposer)) {
+            revert("IFGovernor: not whitelisted proposer address");
+        }
         return
             super._propose(targets, values, calldatas, description, proposer);
     }
