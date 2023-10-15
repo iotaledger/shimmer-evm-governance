@@ -19,7 +19,14 @@ export const PROPOSAL_VOTING_DELAY = 0;
 export const PROPOSAL_THRESHOLD = 0;
 
 // Voting period extension after quorum is reached. This prevents a large voter from
-// swaying a vote and triggering quorum at the last minute, by ensuring there is always time for other voters to react
+// swaying a vote and triggering quorum at the last minute, by ensuring there is always time for other voters to react.
+// The final proposal voting period will be the max between the remaining voting period (PROPOSAL_VOTING_PERIOD)
+// and the late quorum extension (PROPOSAL_LATE_QUORUM_EXTENSION)
+// For example, if the remaining voting period is 5 hours and the big vote arrives then the voting period will be changed to 24 hours.
+// However, if the remaining voting period is 25 hours and the big vote arrives then the voting period will still remain to 25 hours.
+// This is because the remaining voting period is still more than the extension.
+// For short, if the late quorum extension is set to be 24 hours, this means that within the last 24 hours of the voting period
+// if any big vote comes, the voting period will be extended by 24 hours more from the current time.
 export const PROPOSAL_LATE_QUORUM_EXTENSION = 24 * 60 * 60; // 24 hours
 
 // This should not be changed

@@ -13,6 +13,7 @@ import {
   PROPOSAL_QUORUM_FIXED_AMOUNT,
   PROPOSAL_VOTING_DELAY,
   PROPOSAL_VOTING_PERIOD,
+  PROPOSAL_LATE_QUORUM_EXTENSION,
 } from "../configuration";
 import { getBalanceNative, toWei } from "../utils";
 import setupGovernance from "../deploy/setup-governance";
@@ -164,6 +165,9 @@ describe("IF governance test of proposal creation for changing governance settin
     expect(await IFGovernorContract.proposalThreshold()).to.equal(
       PROPOSAL_THRESHOLD
     );
+    expect(await IFGovernorContract.lateQuorumVoteExtension()).to.equal(
+      PROPOSAL_LATE_QUORUM_EXTENSION
+    );
   });
 
   it("Create proposal to change governance settings including timelock delay, quorum fixed amount, voting period, voting delay, proposal threshold and late quorum extension", async () => {
@@ -175,7 +179,7 @@ describe("IF governance test of proposal creation for changing governance settin
         newTimelockDelay,
       ]),
       IFGovernorContract.interface.encodeFunctionData("setQuorumFixedAmount", [
-        newQuorumFixedAmount,
+        toWei(newQuorumFixedAmount),
       ]),
       IFGovernorContract.interface.encodeFunctionData("setVotingPeriod", [
         newProposalVotingPeriod,
@@ -295,6 +299,23 @@ describe("IF governance test of proposal creation for changing governance settin
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Executed);
     expect(await IFTimelockContract.getMinDelay()).to.equal(newTimelockDelay);
+  });
+
+  it("Verify the newly-changed governance settings", async () => {
+    expect(await IFTimelockContract.getMinDelay()).to.equal(newTimelockDelay);
+    expect(await IFGovernorContract.quorum(1)).to.equal(
+      // toWei(PROPOSAL_QUORUM_FIXED_AMOUNT)
+      toWei(newQuorumFixedAmount)
+    );
+    expect(await IFGovernorContract.votingDelay()).to.equal(
+      newProposalVotingDelay
+    );
+    expect(await IFGovernorContract.votingPeriod()).to.equal(
+      newProposalVotingPeriod
+    );
+    expect(await IFGovernorContract.proposalThreshold()).to.equal(
+      newProposalThreshold
+    );
   });
 
   it("Governance settings change will revert if not via proposal execution", async () => {
