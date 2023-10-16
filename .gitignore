@@ -13,3 +13,4 @@ package-lock.json
 yarn.lock
 
 *_merged.sol
+configuration_test.ts

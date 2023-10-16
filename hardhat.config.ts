@@ -8,7 +8,7 @@ const SHIMMER_EVM_TESTNET_RPC_URL =
 const SHIMMER_EVM_MAINNET_RPC_URL = "https://json-rpc.evm.shimmer.network";
 
 const SEPOLIA_RPC_URL =
-  "https://eth-sepolia.g.alchemy.com/v2/j4DkeuoQAmLmSMLZ1AGZeEUdY9f5b25U";
+  "https://eth-sepolia.g.alchemy.com/v2/1Ov3TS8ZjOh0Gmi3eewDFUNz9dxfLA7-";
 
 module.exports = {
   defaultNetwork: "hardhat",

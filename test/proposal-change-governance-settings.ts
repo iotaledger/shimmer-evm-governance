@@ -39,7 +39,7 @@ describe("IF governance test of proposal creation for changing governance settin
   const voteOption = 1; // for
   const voteReason = "good reason";
   const RECIPIENT_NATIVE_SMR = "0x57bA4DBea3198e48af45117e93e2abb9822BEA48";
-  const RECIPIENT_NATIVE_SMR_AMOUNT = 1; // 1 SMR
+  const RECIPIENT_NATIVE_SMR_AMOUNT = toWei(1); // 1 SMR
   const VOTER_1_NATIVE_SMR_AMOUNT = 40;
   const VOTER_2_NATIVE_SMR_AMOUNT = 5;
   const VOTER_3_NATIVE_SMR_AMOUNT = 45;

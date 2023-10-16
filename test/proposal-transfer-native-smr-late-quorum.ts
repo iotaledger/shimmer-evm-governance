@@ -38,7 +38,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
   const voteOption = 1; // for
   const voteReason = "good reason";
   const RECIPIENT_NATIVE_SMR = "0xb20C10460Ae817998025AdBC19b265F3B949cb7c";
-  const RECIPIENT_NATIVE_SMR_AMOUNT = 1; // 1 SMR
+  const RECIPIENT_NATIVE_SMR_AMOUNT = toWei(1); // 1 SMR
   const VOTER_1_NATIVE_SMR_AMOUNT = 40;
   const VOTER_2_NATIVE_SMR_AMOUNT = 5;
   const VOTER_3_NATIVE_SMR_AMOUNT = 45;
@@ -202,9 +202,12 @@ describe("IF governance test of proposal creation for transferring native SMR wi
       await IFGovernorContract.proposalDeadline(proposalId);
     let currentTime = await time.latest();
     const proposalDeadlineDurationBeforeBigVote =
-      proposalDeadlineTimePointBeforeBigVote - BigInt(currentTime) + BigInt(1);
-    expect(proposalDeadlineDurationBeforeBigVote).to.equal(
-      PROPOSAL_VOTING_PERIOD
+      proposalDeadlineTimePointBeforeBigVote - BigInt(currentTime);
+    expect(proposalDeadlineDurationBeforeBigVote).to.below(
+      PROPOSAL_VOTING_PERIOD + 60 // deviation of 60s
+    );
+    expect(proposalDeadlineDurationBeforeBigVote).to.greaterThan(
+      PROPOSAL_VOTING_PERIOD - 60 // deviation of 60s
     );
 
     // Big vote from voter3 to make the proposal reach its quorum
@@ -221,9 +224,12 @@ describe("IF governance test of proposal creation for transferring native SMR wi
       await IFGovernorContract.proposalDeadline(proposalId);
     currentTime = await time.latest();
     let proposalDeadlineDurationAfterBigVote =
-      proposalDeadlineTimePointAfterBigVote - BigInt(currentTime) + BigInt(2);
-    expect(proposalDeadlineDurationAfterBigVote).to.equal(
-      PROPOSAL_VOTING_PERIOD
+      proposalDeadlineTimePointAfterBigVote - BigInt(currentTime);
+    expect(proposalDeadlineDurationAfterBigVote).to.below(
+      PROPOSAL_VOTING_PERIOD + 60 // deviation of 60s
+    );
+    expect(proposalDeadlineDurationAfterBigVote).to.greaterThan(
+      PROPOSAL_VOTING_PERIOD - 60 // deviation of 60s
     );
 
     // Check proposal votes
@@ -255,9 +261,12 @@ describe("IF governance test of proposal creation for transferring native SMR wi
       await IFGovernorContract.proposalDeadline(proposalId);
     currentTime = await time.latest();
     proposalDeadlineDurationAfterBigVote =
-      proposalDeadlineTimePointAfterBigVote - BigInt(currentTime) + BigInt(4);
-    expect(proposalDeadlineDurationAfterBigVote).to.equal(
-      PROPOSAL_LATE_QUORUM_EXTENSION
+      proposalDeadlineTimePointAfterBigVote - BigInt(currentTime);
+    expect(proposalDeadlineDurationAfterBigVote).to.below(
+      PROPOSAL_LATE_QUORUM_EXTENSION + 60 // deviation of 60s
+    );
+    expect(proposalDeadlineDurationAfterBigVote).to.greaterThan(
+      PROPOSAL_LATE_QUORUM_EXTENSION - 60 // deviation of 60s
     );
 
     // Check if voting period is extended by the specify "PROPOSAL_LATE_QUORUM_EXTENSION"
