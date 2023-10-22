@@ -18,7 +18,7 @@ module.exports = {
   networks: {
     hardhat: { chainId: 31337 },
     shimmerEvmTestnet: {
-      chainId: 1072,
+      chainId: 1073,
       url: SHIMMER_EVM_TESTNET_RPC_URL,
       accounts: [`${process.env.DEPLOYER_ACCOUNT_PRIV_KEY}`],
     },

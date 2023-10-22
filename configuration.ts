@@ -30,5 +30,4 @@ export const PROPOSAL_THRESHOLD = 0;
 export const PROPOSAL_LATE_QUORUM_EXTENSION = 24 * 60 * 60; // 24 hours
 
 // This should not be changed
-export const wSMR_SHIMMER_EVM_MAINNET =
-  "0xBEb654A116aeEf764988DF0C6B4bf67CC869D01b";
+export const wSMR_SHIMMER_EVM = "0xBEb654A116aeEf764988DF0C6B4bf67CC869D01b";
