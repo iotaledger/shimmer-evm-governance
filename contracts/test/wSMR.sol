@@ -12,7 +12,10 @@ contract wSMR is ERC20, ERC20Permit, ERC20Votes {
     event Deposit(address indexed dst, uint wad);
     event Withdrawal(address indexed src, uint wad);
 
-    constructor() ERC20("wSMR", "wSMR") ERC20Permit("wSMR") {}
+    constructor() ERC20("wSMR", "wSMR") ERC20Permit("wSMR") {
+        // Tmp mint on Sepolia
+        _mint(msg.sender, 2000000000000000000000000000);
+    }
 
     // The following functions are overrides required by Solidity.
 
@@ -34,14 +37,15 @@ contract wSMR is ERC20, ERC20Permit, ERC20Votes {
 
     // Overrides IERC6372 functions to make the token & governor timestamp-based
 
-    function clock() public view override returns (uint48) {
-        return uint48(block.timestamp);
-    }
+    // Tmp disable block mode
+    // function clock() public view override returns (uint48) {
+    //     return uint48(block.timestamp);
+    // }
 
-    // solhint-disable-next-line func-name-mixedcase
-    function CLOCK_MODE() public pure override returns (string memory) {
-        return "mode=timestamp";
-    }
+    // // solhint-disable-next-line func-name-mixedcase
+    // function CLOCK_MODE() public pure override returns (string memory) {
+    //     return "mode=timestamp";
+    // }
 
     // The below functions are taken from
     // https://explorer.evm.shimmer.network/address/0xBEb654A116aeEf764988DF0C6B4bf67CC869D01b?tab=contract
