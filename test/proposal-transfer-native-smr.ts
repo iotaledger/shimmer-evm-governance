@@ -79,7 +79,7 @@ describe("IF governance test of proposal creation for transferring native SMR", 
     );
   }
 
-  // With Governor, the proposal can only be cancelled if it is still in voting delay (i.e. not yet active for voting).
+  // With the Governor, the proposal can only be canceled if it is still in voting delay (i.e., not yet active for voting).
   async function cancelProposalWithGovernor() {
     return IFGovernorContract.cancel(
       [IFTimelockContract],
@@ -202,7 +202,7 @@ describe("IF governance test of proposal creation for transferring native SMR", 
 
     // Because of no voting delay, once created, the proposal voting will start immediately
     // Thus, the voting power snapshot is also performed immediately
-    // Meaning that, the users need to delegate for voting power before the proposal creation
+    //Means that the users need to delegate voting power before the proposal creation
     await IFVotesTokenContract.connect(voter1).delegate(voter1);
     await IFVotesTokenContract.connect(voter2).delegate(voter2);
 
@@ -276,7 +276,7 @@ describe("IF governance test of proposal creation for transferring native SMR", 
 
   it("Queue & Execute the proposal", async () => {
     // The successful proposal needs to be queued manually
-    // The Timelock deplay will start from this moment
+    // The Timelock delay will start from this moment
     const queueTx = await queueProposal();
     await queueTx.wait();
 
