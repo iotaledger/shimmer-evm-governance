@@ -81,7 +81,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
     );
   }
 
-  // With Governor, the proposal can only be cancelled if it is still in voting delay (i.e. not yet active for voting).
+  // With the Governor, the proposal can only be canceled if it is still in voting delay (i.e., not yet active for voting).
   async function cancelProposalWithGovernor() {
     return IFGovernorContract.cancel(
       [IFTimelockContract],
@@ -169,7 +169,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
 
     // Because of no voting delay, once created, the proposal voting will start immediately
     // Thus, the voting power snapshot is also performed immediately
-    // Meaning that, the users need to delegate for voting power before the proposal creation
+    //Means that the users need to delegate voting power before the proposal creation
     await IFVotesTokenContract.connect(voter1).delegate(voter1);
     await IFVotesTokenContract.connect(voter2).delegate(voter2);
     await IFVotesTokenContract.connect(voter3).delegate(voter3);
@@ -197,7 +197,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
     expect(proposalState).to.equal(ProposalState.Active);
 
     // Get proposal deadline before big vote
-    // It must be same as PROPOSAL_VOTING_PERIOD
+    // It must be the same as PROPOSAL_VOTING_PERIOD
     const proposalDeadlineTimePointBeforeBigVote =
       await IFGovernorContract.proposalDeadline(proposalId);
     let currentTime = await time.latest();
@@ -218,7 +218,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
     );
 
     // Get proposal deadline after big vote
-    // It must still be same as PROPOSAL_VOTING_PERIOD
+    // It must still be the same as PROPOSAL_VOTING_PERIOD
     // because the remaining voting period > later quorum extension
     let proposalDeadlineTimePointAfterBigVote =
       await IFGovernorContract.proposalDeadline(proposalId);
@@ -242,7 +242,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
     expect(forVotes).to.equal(toWei(45));
     expect(abstainVotes).to.equal(toWei(0));
 
-    // Move current voting period to within the last PROPOSAL_LATE_QUORUM_EXTENSION period
+    // Move the current voting period to within the last PROPOSAL_LATE_QUORUM_EXTENSION period
     await time.increase(
       PROPOSAL_VOTING_PERIOD - PROPOSAL_LATE_QUORUM_EXTENSION + 1
     );
@@ -255,7 +255,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
     );
 
     // Get proposal deadline after big vote
-    // It must now be same as PROPOSAL_LATE_QUORUM_EXTENSION
+    // It must now be the same as PROPOSAL_LATE_QUORUM_EXTENSION
     // because the remaining voting period < later quorum extension
     proposalDeadlineTimePointAfterBigVote =
       await IFGovernorContract.proposalDeadline(proposalId);
@@ -269,8 +269,8 @@ describe("IF governance test of proposal creation for transferring native SMR wi
       PROPOSAL_LATE_QUORUM_EXTENSION - 60 // deviation of 60s
     );
 
-    // Check if voting period is extended by the specify "PROPOSAL_LATE_QUORUM_EXTENSION"
-    // Meaning that, proposal status must not be SUCCEEDED and still ACTIVE
+    // Check if the voting period is extended by the specify "PROPOSAL_LATE_QUORUM_EXTENSION"
+    // Meaning that proposal status must not be SUCCEEDED and still ACTIVE
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Active);
 
@@ -284,7 +284,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
 
   it("Queue & Execute the proposal", async () => {
     // The successful proposal needs to be queued manually
-    // The Timelock deplay will start from this moment
+    // The Timelock delay will start from this moment
     const queueTx = await queueProposal();
     await queueTx.wait();
 
