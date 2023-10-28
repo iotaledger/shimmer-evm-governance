@@ -13,12 +13,10 @@ contract IFTimelock is TimelockController {
         address admin
     ) TimelockController(minDelay, proposers, executors, admin) {}
 
-    // Transfer native SMR from the caller to the specified recipient
+    // Transfer native gas token from the caller to the specified recipient.
     // The caller must be the timelock itself.
-    // This can only be achieved by scheduling and later executing
-    // an operation where the timelock is the target and the data is the ABI-encoded call to this function.
-    // Means that, it must go via proposal execution
-    function transferNativeSMR(address payable recipient) external payable {
+    // Means that, it must go via proposal execution.
+    function transferNative(address payable recipient) external payable {
         address sender = _msgSender();
         if (sender != address(this)) {
             revert TimelockUnauthorizedCaller(sender);

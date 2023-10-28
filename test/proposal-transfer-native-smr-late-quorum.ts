@@ -163,7 +163,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
     // because the "value" will be specified when calling the function
     // propose(), queue() and execute() of Governor contract
     encodedFunctionCall = IFTimelockContract.interface.encodeFunctionData(
-      "transferNativeSMR",
+      "transferNative",
       [RECIPIENT_NATIVE_SMR]
     );
 
