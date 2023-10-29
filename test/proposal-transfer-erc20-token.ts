@@ -2,25 +2,26 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { EventLog } from "ethers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { IFGovernor, wSMR, IFTimelock } from "../typechain-types";
+import { IFGovernor, wSMR, IFTimelock, MockErc20 } from "../typechain-types";
 import deployIFGovernor from "../deploy/if-governor";
 import deployIFVotesToken from "../deploy/wSMR-token";
+import deployMockErc20 from "../deploy/mock-erc20-token";
 import deployIFTimelock from "../deploy/if-timelock";
 import { ADDRESS_ZERO } from "../utils/constants";
 import {
   TIME_LOCK_MIN_DELAY,
   PROPOSAL_THRESHOLD,
-  PROPOSAL_QUORUM_FIXED_AMOUNT,
   PROPOSAL_VOTING_DELAY,
   PROPOSAL_VOTING_PERIOD,
-  PROPOSAL_LATE_QUORUM_EXTENSION,
 } from "../configuration";
-import { getBalanceNative, toWei } from "../utils";
+import { toWei } from "../utils";
 import setupGovernance from "../deploy/setup-governance";
 
-describe("IF governance test of proposal creation for changing governance settings", () => {
+describe("IF governance test of proposal creation for transferring ERC20 tokens", () => {
   let IFGovernorContract: IFGovernor;
   let IFVotesTokenContract: wSMR;
+  let MockErc20Contract: MockErc20;
+  let MockErc20ContractAddress: string;
   let IFTimelockContract: IFTimelock;
   let signer: any;
   let voter1: any;
@@ -33,22 +34,15 @@ describe("IF governance test of proposal creation for changing governance settin
   let PROPOSAL_DESCRIPTION_HASH: string;
   let proposalId: string;
   let proposalState: bigint;
-  let encodedFunctionCall: string[];
-  let targetContract: any[];
-  let values: number[];
+  let encodedFunctionCall: string;
   const voteOption = 1; // for
   const voteReason = "good reason";
+  const RECIPIENT_ERC20 = ethers.Wallet.createRandom().address;
+  const RECIPIENT_ERC20_AMOUNT = toWei(5); // 5 erc20 tokens
   const VOTER_1_NATIVE_SMR_AMOUNT = 40;
   const VOTER_2_NATIVE_SMR_AMOUNT = 5;
   const VOTER_3_NATIVE_SMR_AMOUNT = 45;
   const TOTAL_SUPPLY_wSMR = 90;
-
-  const newTimelockDelay = 2 * 60 * 60; // 2 hour
-  const newProposalVotingDelay = 1 * 24 * 60 * 60; // 1 days
-  const newProposalVotingPeriod = 5 * 24 * 60 * 60; // 5 days
-  const newQuorumFixedAmount = 6; // 6 wSMR
-  const newProposalThreshold = 1; // 1 wSMR
-  const newLateQuorumExtension = 48 * 60 * 60; // 48 hours
 
   enum ProposalState {
     Pending,
@@ -63,24 +57,26 @@ describe("IF governance test of proposal creation for changing governance settin
 
   async function queueProposal() {
     return IFGovernorContract.queue(
-      targetContract,
+      [IFTimelockContract],
 
+      // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      values,
+      [0],
 
-      [...encodedFunctionCall],
+      [encodedFunctionCall],
       PROPOSAL_DESCRIPTION_HASH
     );
   }
 
   async function executeProposal() {
     return IFGovernorContract.execute(
-      targetContract,
+      [IFTimelockContract],
 
+      // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      values,
+      [0],
 
-      [...encodedFunctionCall],
+      [encodedFunctionCall],
       PROPOSAL_DESCRIPTION_HASH
     );
   }
@@ -88,12 +84,13 @@ describe("IF governance test of proposal creation for changing governance settin
   // With the Governor, the proposal can only be canceled if it is still in voting delay (i.e., not yet active for voting).
   async function cancelProposalWithGovernor() {
     return IFGovernorContract.cancel(
-      targetContract,
+      [IFTimelockContract],
 
+      // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      values,
+      [0],
 
-      [...encodedFunctionCall],
+      [encodedFunctionCall],
       PROPOSAL_DESCRIPTION_HASH
     );
   }
@@ -101,6 +98,8 @@ describe("IF governance test of proposal creation for changing governance settin
   it("Deploy governance contracts", async () => {
     [signer, voter1, voter2, voter3] = await ethers.getSigners();
     IFVotesTokenContract = await deployIFVotesToken();
+    MockErc20Contract = await deployMockErc20();
+    MockErc20ContractAddress = await MockErc20Contract.getAddress();
     IFTimelockContract = await deployIFTimelock();
     IFGovernorContract = await deployIFGovernor(
       IFVotesTokenContract,
@@ -163,47 +162,41 @@ describe("IF governance test of proposal creation for changing governance settin
     expect(await IFGovernorContract.proposalThreshold()).to.equal(
       PROPOSAL_THRESHOLD
     );
-    expect(await IFGovernorContract.lateQuorumVoteExtension()).to.equal(
-      PROPOSAL_LATE_QUORUM_EXTENSION
-    );
   });
 
-  it("Create proposal to change governance settings including timelock delay, quorum fixed amount, voting period, voting delay, proposal threshold and late quorum extension", async () => {
-    PROPOSAL_DESCRIPTION = "My second proposal";
+  it("Any attempt to create proposal from not whitelisted address will fail.", async () => {
+    PROPOSAL_DESCRIPTION =
+      "My first-ever proposal from not whitelisted address";
     PROPOSAL_DESCRIPTION_HASH = ethers.id(PROPOSAL_DESCRIPTION);
 
-    encodedFunctionCall = [
-      IFTimelockContract.interface.encodeFunctionData("updateDelay", [
-        newTimelockDelay,
-      ]),
-      IFGovernorContract.interface.encodeFunctionData("setQuorumFixedAmount", [
-        toWei(newQuorumFixedAmount),
-      ]),
-      IFGovernorContract.interface.encodeFunctionData("setVotingPeriod", [
-        newProposalVotingPeriod,
-      ]),
-      IFGovernorContract.interface.encodeFunctionData("setVotingDelay", [
-        newProposalVotingDelay,
-      ]),
-      IFGovernorContract.interface.encodeFunctionData("setProposalThreshold", [
-        newProposalThreshold,
-      ]),
-      IFGovernorContract.interface.encodeFunctionData(
-        "setLateQuorumVoteExtension",
-        [newLateQuorumExtension]
-      ),
-    ];
+    encodedFunctionCall = IFTimelockContract.interface.encodeFunctionData(
+      "transferErc20",
+      [MockErc20ContractAddress, RECIPIENT_ERC20, RECIPIENT_ERC20_AMOUNT]
+    );
 
-    targetContract = [
-      IFTimelockContract,
-      IFGovernorContract,
-      IFGovernorContract,
-      IFGovernorContract,
-      IFGovernorContract,
-      IFGovernorContract,
-    ];
+    // Only the whitelisted address can create proposals
+    await expect(
+      IFGovernorContract.connect(voter3).propose(
+        [IFTimelockContract],
 
-    values = [0, 0, 0, 0, 0, 0];
+        // Specify the {value: ...} for interacting with payable func
+        // Set to 0 for non payable function
+        [0],
+
+        [encodedFunctionCall],
+        PROPOSAL_DESCRIPTION
+      )
+    ).to.be.revertedWith("IFGovernor: not whitelisted proposer address");
+  });
+
+  it("Create proposal to transfer ERC20 tokens to the specified RECIPIENT_ERC20", async () => {
+    PROPOSAL_DESCRIPTION = "My first-ever proposal";
+    PROPOSAL_DESCRIPTION_HASH = ethers.id(PROPOSAL_DESCRIPTION);
+
+    encodedFunctionCall = IFTimelockContract.interface.encodeFunctionData(
+      "transferErc20",
+      [MockErc20ContractAddress, RECIPIENT_ERC20, RECIPIENT_ERC20_AMOUNT]
+    );
 
     // Because of no voting delay, once created, the proposal voting will start immediately
     // Thus, the voting power snapshot is also performed immediately
@@ -212,12 +205,13 @@ describe("IF governance test of proposal creation for changing governance settin
     await IFVotesTokenContract.connect(voter2).delegate(voter2);
 
     const proposeTx = await IFGovernorContract.propose(
-      targetContract,
+      [IFTimelockContract],
 
+      // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      values,
+      [0],
 
-      [...encodedFunctionCall],
+      [encodedFunctionCall],
       PROPOSAL_DESCRIPTION
     );
 
@@ -282,35 +276,28 @@ describe("IF governance test of proposal creation for changing governance settin
     const queueTx = await queueProposal();
     await queueTx.wait();
 
-    // await cancelProposalWithTimelock();
-
     await time.increase(TIME_LOCK_MIN_DELAY + 1);
 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Queued);
+
+    // Fund ERC20 tokens for the Timelock
+    const timelockAddress = await (IFTimelockContract as any).getAddress();
+
+    await MockErc20Contract.transfer(timelockAddress, RECIPIENT_ERC20_AMOUNT);
+    expect(await MockErc20Contract.balanceOf(timelockAddress)).to.equal(
+      RECIPIENT_ERC20_AMOUNT
+    );
+    //////
 
     const executeTx = await executeProposal();
     await executeTx.wait();
 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Executed);
-    expect(await IFTimelockContract.getMinDelay()).to.equal(newTimelockDelay);
-  });
-
-  it("Verify the newly-changed governance settings", async () => {
-    expect(await IFTimelockContract.getMinDelay()).to.equal(newTimelockDelay);
-    expect(await IFGovernorContract.quorum(1)).to.equal(
-      // toWei(PROPOSAL_QUORUM_FIXED_AMOUNT)
-      toWei(newQuorumFixedAmount)
-    );
-    expect(await IFGovernorContract.votingDelay()).to.equal(
-      newProposalVotingDelay
-    );
-    expect(await IFGovernorContract.votingPeriod()).to.equal(
-      newProposalVotingPeriod
-    );
-    expect(await IFGovernorContract.proposalThreshold()).to.equal(
-      newProposalThreshold
+    expect(await MockErc20Contract.balanceOf(timelockAddress)).to.equal(0);
+    expect(await MockErc20Contract.balanceOf(RECIPIENT_ERC20)).to.equal(
+      RECIPIENT_ERC20_AMOUNT
     );
   });
 
