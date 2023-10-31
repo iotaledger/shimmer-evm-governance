@@ -300,6 +300,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
     expect(await getBalanceNative(timelockAddress)).to.equal(
       RECIPIENT_NATIVE_SMR_AMOUNT
     );
+    expect(await getBalanceNative(RECIPIENT_NATIVE_SMR)).to.equal(0);
     //////
 
     const executeTx = await executeProposal();

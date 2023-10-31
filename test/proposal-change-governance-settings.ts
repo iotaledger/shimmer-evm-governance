@@ -294,7 +294,6 @@ describe("IF governance test of proposal creation for changing governance settin
 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Executed);
-    expect(await IFTimelockContract.getMinDelay()).to.equal(newTimelockDelay);
   });
 
   it("Verify the newly-changed governance settings", async () => {

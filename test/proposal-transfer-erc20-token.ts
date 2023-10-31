@@ -288,6 +288,7 @@ describe("IF governance test of proposal creation for transferring ERC20 tokens"
     expect(await MockErc20Contract.balanceOf(timelockAddress)).to.equal(
       RECIPIENT_ERC20_AMOUNT
     );
+    expect(await MockErc20Contract.balanceOf(RECIPIENT_ERC20)).to.equal(0);
     //////
 
     const executeTx = await executeProposal();

@@ -6,7 +6,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
-contract Mock1155 is ERC1155 {
+contract MockErc1155 is ERC1155 {
     uint256 private tokenId;
 
     constructor() ERC1155("") {}
