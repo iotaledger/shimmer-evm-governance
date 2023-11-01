@@ -2,9 +2,10 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { EventLog } from "ethers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { IFGovernor, wSMR, IFTimelock } from "../typechain-types";
+import { IFGovernor, wSMR, IFTimelock, MockErc721 } from "../typechain-types";
 import deployIFGovernor from "../deploy/if-governor";
 import deployIFVotesToken from "../deploy/wSMR-token";
+import deployMockErc721 from "../deploy/mock-erc721-token";
 import deployIFTimelock from "../deploy/if-timelock";
 import { ADDRESS_ZERO } from "../utils/constants";
 import {
@@ -13,12 +14,15 @@ import {
   PROPOSAL_VOTING_DELAY,
   PROPOSAL_VOTING_PERIOD,
 } from "../configuration";
-import { getBalanceNative, toWei } from "../utils";
+import { toWei } from "../utils";
 import setupGovernance from "../deploy/setup-governance";
 
-describe("IF governance test of proposal creation for transferring native SMR", () => {
+describe("IF governance test of proposal creation for transferring ERC721 tokens", () => {
   let IFGovernorContract: IFGovernor;
   let IFVotesTokenContract: wSMR;
+  let MockErc721Contract: MockErc721;
+  let MockErc721ContractAddress: string;
+  let MockErc721TokenId: number;
   let IFTimelockContract: IFTimelock;
   let signer: any;
   let voter1: any;
@@ -34,8 +38,8 @@ describe("IF governance test of proposal creation for transferring native SMR", 
   let encodedFunctionCall: string;
   const voteOption = 1; // for
   const voteReason = "good reason";
-  const RECIPIENT_NATIVE_SMR = ethers.Wallet.createRandom().address;
-  const RECIPIENT_NATIVE_SMR_AMOUNT = toWei(1); // 1 SMR
+  const RECIPIENT_ERC721 = ethers.Wallet.createRandom().address;
+  const RECIPIENT_ERC721_AMOUNT = 1; // 1 erc721 tokens
   const VOTER_1_NATIVE_SMR_AMOUNT = 40;
   const VOTER_2_NATIVE_SMR_AMOUNT = 5;
   const VOTER_3_NATIVE_SMR_AMOUNT = 45;
@@ -58,7 +62,7 @@ describe("IF governance test of proposal creation for transferring native SMR", 
 
       // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      [RECIPIENT_NATIVE_SMR_AMOUNT],
+      [0],
 
       [encodedFunctionCall],
       PROPOSAL_DESCRIPTION_HASH
@@ -71,7 +75,7 @@ describe("IF governance test of proposal creation for transferring native SMR", 
 
       // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      [RECIPIENT_NATIVE_SMR_AMOUNT],
+      [0],
 
       [encodedFunctionCall],
       PROPOSAL_DESCRIPTION_HASH
@@ -85,7 +89,7 @@ describe("IF governance test of proposal creation for transferring native SMR", 
 
       // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      [RECIPIENT_NATIVE_SMR_AMOUNT],
+      [0],
 
       [encodedFunctionCall],
       PROPOSAL_DESCRIPTION_HASH
@@ -95,6 +99,10 @@ describe("IF governance test of proposal creation for transferring native SMR", 
   it("Deploy governance contracts", async () => {
     [signer, voter1, voter2, voter3] = await ethers.getSigners();
     IFVotesTokenContract = await deployIFVotesToken();
+    MockErc721Contract = await deployMockErc721();
+    MockErc721ContractAddress = await MockErc721Contract.getAddress();
+    await MockErc721Contract.mintNewItem();
+    MockErc721TokenId = 1;
     IFTimelockContract = await deployIFTimelock();
     IFGovernorContract = await deployIFGovernor(
       IFVotesTokenContract,
@@ -164,12 +172,14 @@ describe("IF governance test of proposal creation for transferring native SMR", 
       "My first-ever proposal from not whitelisted address";
     PROPOSAL_DESCRIPTION_HASH = ethers.id(PROPOSAL_DESCRIPTION);
 
-    // No need to specify {value: ...} when encodeFunctionData
-    // because the "value" will be specified when calling the function
-    // propose(), queue() and execute() of Governor contract
     encodedFunctionCall = IFTimelockContract.interface.encodeFunctionData(
-      "transferNative",
-      [RECIPIENT_NATIVE_SMR]
+      "transferNFT",
+      [
+        MockErc721ContractAddress,
+        RECIPIENT_ERC721,
+        MockErc721TokenId,
+        RECIPIENT_ERC721_AMOUNT,
+      ]
     );
 
     // Only the whitelisted address can create proposals
@@ -179,7 +189,7 @@ describe("IF governance test of proposal creation for transferring native SMR", 
 
         // Specify the {value: ...} for interacting with payable func
         // Set to 0 for non payable function
-        [RECIPIENT_NATIVE_SMR_AMOUNT],
+        [0],
 
         [encodedFunctionCall],
         PROPOSAL_DESCRIPTION
@@ -187,16 +197,18 @@ describe("IF governance test of proposal creation for transferring native SMR", 
     ).to.be.revertedWith("IFGovernor: not whitelisted proposer address");
   });
 
-  it("Create proposal to transfer native SMR to the specified RECIPIENT_NATIVE_SMR", async () => {
+  it("Create proposal to transfer ERC721 tokens to the specified RECIPIENT_ERC721", async () => {
     PROPOSAL_DESCRIPTION = "My first-ever proposal";
     PROPOSAL_DESCRIPTION_HASH = ethers.id(PROPOSAL_DESCRIPTION);
 
-    // No need to specify {value: ...} when encodeFunctionData
-    // because the "value" will be specified when calling the function
-    // propose(), queue() and execute() of Governor contract
     encodedFunctionCall = IFTimelockContract.interface.encodeFunctionData(
-      "transferNative",
-      [RECIPIENT_NATIVE_SMR]
+      "transferNFT",
+      [
+        MockErc721ContractAddress,
+        RECIPIENT_ERC721,
+        MockErc721TokenId,
+        RECIPIENT_ERC721_AMOUNT,
+      ]
     );
 
     // Because of no voting delay, once created, the proposal voting will start immediately
@@ -210,7 +222,7 @@ describe("IF governance test of proposal creation for transferring native SMR", 
 
       // Specify the {value: ...} for interacting with payable func
       // Set to 0 for non payable function
-      [RECIPIENT_NATIVE_SMR_AMOUNT],
+      [0],
 
       [encodedFunctionCall],
       PROPOSAL_DESCRIPTION
@@ -263,10 +275,8 @@ describe("IF governance test of proposal creation for transferring native SMR", 
     const timeAtVote = await time.latest();
     await time.increase(PROPOSAL_VOTING_PERIOD + 1);
 
-    const currentQuorum = await IFGovernorContract.quorum(timeAtVote);
     // console.log("currentQuorum:", currentQuorum);
 
-    const currentVotesTokenSupply = await IFVotesTokenContract.totalSupply();
     // console.log("currentVotesTokenSupply:", currentVotesTokenSupply);
 
     proposalState = await IFGovernorContract.state(proposalId);
@@ -279,23 +289,23 @@ describe("IF governance test of proposal creation for transferring native SMR", 
     const queueTx = await queueProposal();
     await queueTx.wait();
 
-    // await cancelProposalWithTimelock();
-
     await time.increase(TIME_LOCK_MIN_DELAY + 1);
 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Queued);
 
-    // Fund native SMR for the Timelock
+    // Fund ERC721 tokens for the Timelock
     const timelockAddress = await (IFTimelockContract as any).getAddress();
-    await signer.sendTransaction({
-      to: timelockAddress,
-      value: RECIPIENT_NATIVE_SMR_AMOUNT,
-    });
-    expect(await getBalanceNative(timelockAddress)).to.equal(
-      RECIPIENT_NATIVE_SMR_AMOUNT
+
+    await MockErc721Contract.safeTransferFrom(
+      signer.address,
+      timelockAddress,
+      MockErc721TokenId
     );
-    expect(await getBalanceNative(RECIPIENT_NATIVE_SMR)).to.equal(0);
+    expect(await MockErc721Contract.balanceOf(timelockAddress)).to.equal(
+      RECIPIENT_ERC721_AMOUNT
+    );
+    expect(await MockErc721Contract.balanceOf(RECIPIENT_ERC721)).to.equal(0);
     //////
 
     const executeTx = await executeProposal();
@@ -303,9 +313,9 @@ describe("IF governance test of proposal creation for transferring native SMR", 
 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Executed);
-    expect(await getBalanceNative(timelockAddress)).to.equal("0");
-    expect(await getBalanceNative(RECIPIENT_NATIVE_SMR)).to.equal(
-      RECIPIENT_NATIVE_SMR_AMOUNT
+    expect(await MockErc721Contract.balanceOf(timelockAddress)).to.equal(0);
+    expect(await MockErc721Contract.balanceOf(RECIPIENT_ERC721)).to.equal(
+      RECIPIENT_ERC721_AMOUNT
     );
   });
 

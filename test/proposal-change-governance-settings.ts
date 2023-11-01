@@ -38,8 +38,6 @@ describe("IF governance test of proposal creation for changing governance settin
   let values: number[];
   const voteOption = 1; // for
   const voteReason = "good reason";
-  const RECIPIENT_NATIVE_SMR = "0x57bA4DBea3198e48af45117e93e2abb9822BEA48";
-  const RECIPIENT_NATIVE_SMR_AMOUNT = toWei(1); // 1 SMR
   const VOTER_1_NATIVE_SMR_AMOUNT = 40;
   const VOTER_2_NATIVE_SMR_AMOUNT = 5;
   const VOTER_3_NATIVE_SMR_AMOUNT = 45;
@@ -270,10 +268,8 @@ describe("IF governance test of proposal creation for changing governance settin
     const timeAtVote = await time.latest();
     await time.increase(PROPOSAL_VOTING_PERIOD + 1);
 
-    const currentQuorum = await IFGovernorContract.quorum(timeAtVote);
     // console.log("currentQuorum:", currentQuorum);
 
-    const currentVotesTokenSupply = await IFVotesTokenContract.totalSupply();
     // console.log("currentVotesTokenSupply:", currentVotesTokenSupply);
 
     proposalState = await IFGovernorContract.state(proposalId);
@@ -298,7 +294,6 @@ describe("IF governance test of proposal creation for changing governance settin
 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Executed);
-    expect(await IFTimelockContract.getMinDelay()).to.equal(newTimelockDelay);
   });
 
   it("Verify the newly-changed governance settings", async () => {

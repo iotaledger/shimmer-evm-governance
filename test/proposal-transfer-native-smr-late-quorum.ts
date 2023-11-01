@@ -9,8 +9,6 @@ import deployIFTimelock from "../deploy/if-timelock";
 import { ADDRESS_ZERO } from "../utils/constants";
 import {
   TIME_LOCK_MIN_DELAY,
-  PROPOSAL_THRESHOLD,
-  PROPOSAL_QUORUM_FIXED_AMOUNT,
   PROPOSAL_VOTING_DELAY,
   PROPOSAL_VOTING_PERIOD,
   PROPOSAL_LATE_QUORUM_EXTENSION,
@@ -37,7 +35,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
   let encodedFunctionCall: string;
   const voteOption = 1; // for
   const voteReason = "good reason";
-  const RECIPIENT_NATIVE_SMR = "0xb20C10460Ae817998025AdBC19b265F3B949cb7c";
+  const RECIPIENT_NATIVE_SMR = ethers.Wallet.createRandom().address;
   const RECIPIENT_NATIVE_SMR_AMOUNT = toWei(1); // 1 SMR
   const VOTER_1_NATIVE_SMR_AMOUNT = 40;
   const VOTER_2_NATIVE_SMR_AMOUNT = 5;
@@ -163,7 +161,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
     // because the "value" will be specified when calling the function
     // propose(), queue() and execute() of Governor contract
     encodedFunctionCall = IFTimelockContract.interface.encodeFunctionData(
-      "transferNativeSMR",
+      "transferNative",
       [RECIPIENT_NATIVE_SMR]
     );
 
@@ -302,6 +300,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
     expect(await getBalanceNative(timelockAddress)).to.equal(
       RECIPIENT_NATIVE_SMR_AMOUNT
     );
+    expect(await getBalanceNative(RECIPIENT_NATIVE_SMR)).to.equal(0);
     //////
 
     const executeTx = await executeProposal();

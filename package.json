@@ -6,6 +6,7 @@
     "clean": "rimraf artifacts cache",
     "compile": "npm run clean && npx hardhat compile",
     "test": "npx hardhat test",
+    "code-coverage": "npx hardhat coverage",
     "test-late-quorum": "npx hardhat test ./test/proposal-transfer-native-smr-late-quorum.ts",
     "deploy-hardhat": "npx hardhat run scripts/deploy_governance.ts --network hardhat",
     "deploy-shimmerEvmTestnet": "npx hardhat run scripts/deploy_governance.ts --network shimmerEvmTestnet",
@@ -30,6 +31,7 @@
   "dependencies": {
     "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
     "@openzeppelin/contracts": "^5.0.0",
-    "dotenv": "^16.1.4"
+    "dotenv": "^16.1.4",
+    "solidity-coverage": "^0.8.5"
   }
 }
