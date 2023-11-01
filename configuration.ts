@@ -2,7 +2,8 @@
 export const SEPOLIA_BLOCK_TIME = 12; // 12s
 
 // Minimum Timelock delay in seconds operations after the proposal passes
-export const TIME_LOCK_MIN_DELAY = (3 * 60 * 60) / SEPOLIA_BLOCK_TIME; // 3 hours
+// Must specify in the unit of seconds instead of blocks
+export const TIME_LOCK_MIN_DELAY = 3 * 60 * 60; // 3 hours
 
 // ADMIN_ROLE of Timelock contract will be under this specified multisig wallet
 export const TIME_LOCK_ADMIN_MULTISIG =
