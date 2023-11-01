@@ -1,6 +1,7 @@
 import "dotenv/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-gas-reporter";
+import "solidity-coverage";
 
 const SHIMMER_EVM_TESTNET_RPC_URL =
   "https://json-rpc.evm.testnet.shimmer.network";

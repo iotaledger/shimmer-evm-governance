@@ -49,10 +49,6 @@ The deployed contract addresses are stored in the folder `deployed-contract-addr
 
 The deployed contract addresses are stored in the folder `deployed-contract-address\shimmerEvmMainnet`
 
-## Unit-test
-
-`npm run test`
-
 ## Notice
 
 ### Proposal state and cancellation
@@ -71,42 +67,93 @@ The deployed contract addresses are stored in the folder `deployed-contract-addr
 
 ## Unit-test result
 
+`npm run test`
+
 ```
 > if-governance@1.0.0 test
 > npx hardhat test
 
-
-
   IF governance test of proposal creation for changing governance settings
-    ✔ Deploy governance contracts (1356ms)
+    ✔ Deploy governance contracts (1253ms)
     ✔ Setup governance (91ms)
-    ✔ Verify wSMR total supply after users have deposited (56ms)
+    ✔ Verify wSMR total supply after users have deposited (62ms)
     ✔ Verify IFGovernor contract property
-    ✔ Create proposal to change governance settings including timelock delay, quorum fixed amount, voting period, voting delay, proposal threshold and late quorum extension (84ms)
-    ✔ Vote the created proposal. If proposal still active, any attempt to queue/execute/cancel it will revert. (159ms)
-    ✔ Queue & Execute the proposal (165ms)
+    ✔ Create proposal to change governance settings including timelock delay, quorum fixed amount, voting period, voting delay, proposal threshold and late quorum extension (72ms)
+    ✔ Vote the created proposal. If proposal still active, any attempt to queue/execute/cancel it will revert. (147ms)
+    ✔ Queue & Execute the proposal (142ms)
     ✔ Verify the newly-changed governance settings
+    ✔ Governance settings change will revert if not via proposal execution (56ms)
+
+  IF governance test of proposal creation for transferring ERC1155 tokens
+    ✔ Deploy governance contracts (114ms)
+    ✔ Setup governance (56ms)
+    ✔ Verify wSMR total supply after users have deposited (46ms)
+    ✔ Verify IFGovernor contract property
+    ✔ Any attempt to create proposal from not whitelisted address will fail.
+    ✔ Create proposal to transfer ERC1155 tokens to the specified RECIPIENT_ERC1155 (43ms)
+    ✔ Vote the created proposal. If proposal still active, any attempt to queue/execute/cancel it will revert. (92ms)
+    ✔ Queue & Execute the proposal (108ms)
+    ✔ Governance settings change will revert if not via proposal execution
+
+  IF governance test of proposal creation for transferring ERC20 tokens
+    ✔ Deploy governance contracts (101ms)
+    ✔ Setup governance (61ms)
+    ✔ Verify wSMR total supply after users have deposited (46ms)
+    ✔ Verify IFGovernor contract property
+    ✔ Any attempt to create proposal from not whitelisted address will fail.
+    ✔ Create proposal to transfer ERC20 tokens to the specified RECIPIENT_ERC20 (40ms)
+    ✔ Vote the created proposal. If proposal still active, any attempt to queue/execute/cancel it will revert. (86ms)
+    ✔ Queue & Execute the proposal (88ms)
+    ✔ Governance settings change will revert if not via proposal execution
+
+  IF governance test of proposal creation for transferring ERC721 tokens
+    ✔ Deploy governance contracts (113ms)
+    ✔ Setup governance (48ms)
+    ✔ Verify wSMR total supply after users have deposited (44ms)
+    ✔ Verify IFGovernor contract property
+    ✔ Any attempt to create proposal from not whitelisted address will fail.
+    ✔ Create proposal to transfer ERC721 tokens to the specified RECIPIENT_ERC721
+    ✔ Vote the created proposal. If proposal still active, any attempt to queue/execute/cancel it will revert. (80ms)
+    ✔ Queue & Execute the proposal (92ms)
     ✔ Governance settings change will revert if not via proposal execution (43ms)
 
   IF governance test of proposal creation for transferring native SMR with late quorum extension
-    ✔ Deploy governance contracts (95ms)
-    ✔ Setup governance (57ms)
-    ✔ Verify wSMR total supply after users have deposited (56ms)
-    ✔ Create proposal to transfer native SMR to the specified RECIPIENT_NATIVE_SMR (56ms)
-    ✔ Big vote on the proposal to make it reach the quorum. Verify the voting period extension (78ms)
-    ✔ Queue & Execute the proposal (90ms)
+    ✔ Deploy governance contracts (78ms)
+    ✔ Setup governance (53ms)
+    ✔ Verify wSMR total supply after users have deposited (48ms)
+    ✔ Create proposal to transfer native SMR to the specified RECIPIENT_NATIVE_SMR (49ms)
+    ✔ Big vote on the proposal to make it reach the quorum. Verify the voting period extension (62ms)
+    ✔ Queue & Execute the proposal (70ms)
 
   IF governance test of proposal creation for transferring native SMR
-    ✔ Deploy governance contracts (91ms)
-    ✔ Setup governance (53ms)
-    ✔ Verify wSMR total supply after users have deposited (52ms)
+    ✔ Deploy governance contracts (77ms)
+    ✔ Setup governance (49ms)
+    ✔ Verify wSMR total supply after users have deposited (49ms)
     ✔ Verify IFGovernor contract property
     ✔ Any attempt to create proposal from not whitelisted address will fail.
-    ✔ Create proposal to transfer native SMR to the specified RECIPIENT_NATIVE_SMR (39ms)
-    ✔ Vote the created proposal. If proposal still active, any attempt to queue/execute/cancel it will revert. (91ms)
-    ✔ Queue & Execute the proposal (74ms)
+    ✔ Create proposal to transfer native SMR to the specified RECIPIENT_NATIVE_SMR
+    ✔ Vote the created proposal. If proposal still active, any attempt to queue/execute/cancel it will revert. (83ms)
+    ✔ Queue & Execute the proposal (67ms)
     ✔ Governance settings change will revert if not via proposal execution
 
 
-  24 passing (3s)
+  51 passing (4s)
+```
+
+## Code coverage
+
+`npm run code-coverage`
+
+```
+----------------------------------|----------|----------|----------|----------|----------------|
+File                              |  % Stmts | % Branch |  % Funcs |  % Lines |Uncovered Lines |
+----------------------------------|----------|----------|----------|----------|----------------|
+ governance/                      |    85.71 |    47.37 |    82.76 |    81.63 |                |
+  IFGovernor.sol                  |    86.67 |      100 |    85.71 |     87.5 |        111,176 |
+  IFGovernorQuorumFixedAmount.sol |      100 |      100 |      100 |      100 |                |
+  IFGovernorWhitelist.sol         |    55.56 |       10 |       50 |       50 |... 47,56,58,60 |
+  IFTimelock.sol                  |      100 |    54.17 |      100 |    94.12 |             27 |
+----------------------------------|----------|----------|----------|----------|----------------|
+All files                         |    85.71 |    47.37 |    82.76 |    81.63 |                |
+----------------------------------|----------|----------|----------|----------|----------------|
 ```

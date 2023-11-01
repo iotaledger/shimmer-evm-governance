@@ -38,8 +38,6 @@ describe("IF governance test of proposal creation for changing governance settin
   let values: number[];
   const voteOption = 1; // for
   const voteReason = "good reason";
-  const RECIPIENT_NATIVE_SMR = "0x57bA4DBea3198e48af45117e93e2abb9822BEA48";
-  const RECIPIENT_NATIVE_SMR_AMOUNT = toWei(1); // 1 SMR
   const VOTER_1_NATIVE_SMR_AMOUNT = 40;
   const VOTER_2_NATIVE_SMR_AMOUNT = 5;
   const VOTER_3_NATIVE_SMR_AMOUNT = 45;
@@ -87,7 +85,7 @@ describe("IF governance test of proposal creation for changing governance settin
     );
   }
 
-  // With Governor, the proposal can only be cancelled if it is still in voting delay (i.e. not yet active for voting).
+  // With the Governor, the proposal can only be canceled if it is still in voting delay (i.e., not yet active for voting).
   async function cancelProposalWithGovernor() {
     return IFGovernorContract.cancel(
       targetContract,
@@ -209,7 +207,7 @@ describe("IF governance test of proposal creation for changing governance settin
 
     // Because of no voting delay, once created, the proposal voting will start immediately
     // Thus, the voting power snapshot is also performed immediately
-    // Meaning that, the users need to delegate for voting power before the proposal creation
+    //Means that the users need to delegate voting power before the proposal creation
     await IFVotesTokenContract.connect(voter1).delegate(voter1);
     await IFVotesTokenContract.connect(voter2).delegate(voter2);
 
@@ -270,10 +268,8 @@ describe("IF governance test of proposal creation for changing governance settin
     const timeAtVote = await time.latest();
     await time.increase(PROPOSAL_VOTING_PERIOD + 1);
 
-    const currentQuorum = await IFGovernorContract.quorum(timeAtVote);
     // console.log("currentQuorum:", currentQuorum);
 
-    const currentVotesTokenSupply = await IFVotesTokenContract.totalSupply();
     // console.log("currentVotesTokenSupply:", currentVotesTokenSupply);
 
     proposalState = await IFGovernorContract.state(proposalId);
@@ -282,7 +278,7 @@ describe("IF governance test of proposal creation for changing governance settin
 
   it("Queue & Execute the proposal", async () => {
     // The successful proposal needs to be queued manually
-    // The Timelock deplay will start from this moment
+    // The Timelock delay will start from this moment
     const queueTx = await queueProposal();
     await queueTx.wait();
 
@@ -298,7 +294,6 @@ describe("IF governance test of proposal creation for changing governance settin
 
     proposalState = await IFGovernorContract.state(proposalId);
     expect(proposalState).to.equal(ProposalState.Executed);
-    expect(await IFTimelockContract.getMinDelay()).to.equal(newTimelockDelay);
   });
 
   it("Verify the newly-changed governance settings", async () => {
