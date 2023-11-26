@@ -8,8 +8,8 @@ async function deployWSMRToken(): Promise<wSMR> {
 
   // On ShimmerEVM mainnet and testnet, reference the existing wSMR
   if (
-    network.name === "shimmerEvmMainnet" ||
-    network.name === "shimmerEvmTestnet"
+    network.name ===
+    "shimmerEvmMainnet" /* || network.name === "shimmerEvmTestnet" */
   ) {
     wSMRTokenContract = new ethers.Contract(
       wSMR_SHIMMER_EVM,

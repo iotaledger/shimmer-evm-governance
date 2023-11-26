@@ -1,5 +1,5 @@
 // Sepolia block time is 12s
-export const SEPOLIA_BLOCK_TIME = 12; // 12s
+// export const SEPOLIA_BLOCK_TIME = 12; // 12s
 
 // Minimum Timelock delay in seconds operations after the proposal passes
 // Must specify in the unit of seconds instead of blocks
@@ -15,7 +15,7 @@ export const PROPOSER_2_MULTISIG = "0x5cbf0Aa75c003B6C282fb4Ab158c5e2305082f13";
 
 // Governor Values
 export const PROPOSAL_QUORUM_FIXED_AMOUNT = 45_000_000; // 45 millions of wSMR tokens
-export const PROPOSAL_VOTING_PERIOD = (3 * 60 * 60) / SEPOLIA_BLOCK_TIME; // 3 hours
+export const PROPOSAL_VOTING_PERIOD = 3 * 60 * 60; /* / SEPOLIA_BLOCK_TIME */ // 3 hours
 // No voting delay so that snapshot happens immediately
 // This requires the users to delegate for voting power before the proposal is created
 export const PROPOSAL_VOTING_DELAY = 0;
@@ -32,7 +32,7 @@ export const PROPOSAL_THRESHOLD = 0;
 // For short, if the late quorum extension is set to be 24 hours, this means that within the last 24 hours of the voting period
 // if any big vote comes, the voting period will be extended by 24 hours more from the current time.
 export const PROPOSAL_LATE_QUORUM_EXTENSION =
-  (3 * 60 * 60) / SEPOLIA_BLOCK_TIME; // 3 hours
+  3 * 60 * 60; /* / SEPOLIA_BLOCK_TIME */ // 3 hours
 
 // This should not be changed
 export const wSMR_SHIMMER_EVM = "0xBEb654A116aeEf764988DF0C6B4bf67CC869D01b";
