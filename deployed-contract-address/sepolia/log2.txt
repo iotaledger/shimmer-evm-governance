@@ -1,0 +1,10 @@
+> if-governance@1.0.0 deploy-sepolia
+> npx hardhat run scripts/deploy_governance.ts --network sepolia
+
+wSMRTokenContract address: 0xBc9E7AdE1D57c5090381e1b9F8ECF52841badaAb
+IFTimelockContract address: 0xd478e7AbbA8f76F0473e882B97F4268B266bC9F3
+IFGovernorContract address: 0xfB34B767B9DA946b725D0d37B9c619Ac82DF67C8
+IFTimelockContract grant PROPOSER_ROLE to IFGovernorContract - tx: 0x33370b80d3e0b384ab77bba684c382b88c5532fbe14c4b41d280d6cb2dd547dd
+Disable EXECUTOR_ROLE of IFTimelockContract - tx: 0x6bc83de763e325396bd82e417d8b03b0ac87cd8d7bd121ce88856676c0d4cecc
+IFTimelockContract grant ADMIN_ROLE to a multisig (0x5e812d3128D8fD7CEac08CEca1Cd879E76a6E028) - tx: 0xa44c1c06d951e62f591c097bbac3fec99087e3774cb1289a7b7e09dbb90428c7
+Revoke Timelock's ADMIN_ROLE of the deploying account - tx: 0xd54a9a25d21bebd9acd18f3b5f4a727872e3098d6aaea4df8f668f016f0aa71a

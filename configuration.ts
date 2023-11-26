@@ -1,17 +1,21 @@
+// Sepolia block time is 12s
+export const SEPOLIA_BLOCK_TIME = 12; // 12s
+
 // Minimum Timelock delay in seconds operations after the proposal passes
-export const TIME_LOCK_MIN_DELAY = 3 * 24 * 60 * 60; // 3 days
+// Must specify in the unit of seconds instead of blocks
+export const TIME_LOCK_MIN_DELAY = 3 * 60 * 60; // 3 hours
 
 // ADMIN_ROLE of Timelock contract will be under this specified multisig wallet
 export const TIME_LOCK_ADMIN_MULTISIG =
-  "0x57bA4DBea3198e48af45117e93e2abb9822BEA48";
+  "0x5e812d3128D8fD7CEac08CEca1Cd879E76a6E028"; // Sepolia-2
 
 // Multisig address that can create the proposals
-export const PROPOSER_1_MULTISIG = "0x57A4bD139Fb673D364A6f12Df9177A3f686625F3";
-export const PROPOSER_2_MULTISIG = "0x5e812d3128D8fD7CEac08CEca1Cd879E76a6E028";
+export const PROPOSER_1_MULTISIG = "0x57A4bD139Fb673D364A6f12Df9177A3f686625F3"; // Sepolia-1
+export const PROPOSER_2_MULTISIG = "0x5cbf0Aa75c003B6C282fb4Ab158c5e2305082f13"; // Holger
 
 // Governor Values
 export const PROPOSAL_QUORUM_FIXED_AMOUNT = 45_000_000; // 45 millions of wSMR tokens
-export const PROPOSAL_VOTING_PERIOD = 7 * 24 * 60 * 60; // 7 days
+export const PROPOSAL_VOTING_PERIOD = (3 * 60 * 60) / SEPOLIA_BLOCK_TIME; // 3 hours
 // No voting delay so that snapshot happens immediately
 // This requires the users to delegate for voting power before the proposal is created
 export const PROPOSAL_VOTING_DELAY = 0;
@@ -27,7 +31,8 @@ export const PROPOSAL_THRESHOLD = 0;
 // This is because the remaining voting period is still more than the extension.
 // For short, if the late quorum extension is set to be 24 hours, this means that within the last 24 hours of the voting period
 // if any big vote comes, the voting period will be extended by 24 hours more from the current time.
-export const PROPOSAL_LATE_QUORUM_EXTENSION = 24 * 60 * 60; // 24 hours
+export const PROPOSAL_LATE_QUORUM_EXTENSION =
+  (3 * 60 * 60) / SEPOLIA_BLOCK_TIME; // 3 hours
 
 // This should not be changed
 export const wSMR_SHIMMER_EVM = "0xBEb654A116aeEf764988DF0C6B4bf67CC869D01b";
