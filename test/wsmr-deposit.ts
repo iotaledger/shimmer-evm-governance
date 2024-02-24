@@ -4,7 +4,7 @@ import { wSMR } from "../typechain-types";
 import deployIFVotesToken from "../deploy/wSMR-token";
 import { getBalanceNative } from "../utils";
 
-describe("Deposit 1 wei to get wSMR token", () => {
+describe("Test decimal issue of the SMR as native gas token", () => {
   let wSMRTokenContract: wSMR;
   let signer: any;
 
@@ -13,35 +13,39 @@ describe("Deposit 1 wei to get wSMR token", () => {
     wSMRTokenContract = await deployIFVotesToken();
   });
 
-  it("Deposit 1 wei and check SMR balance before/after to see that 1 wei is discarded.", async () => {
-    const ONE_WEI = BigInt(1);
+  it("Deposit SMR and check if the deposited SMR value is really deducted from the wallet balance.", async () => {
+    // const DEPOSIT_VALUE_IN_WEI = BigInt(1); // 1 wei
+    // const DEPOSIT_VALUE_IN_WEI = BigInt(1234567000000000000); // 1.234567 SMR (6 decimals)
+    const DEPOSIT_VALUE_IN_WEI = BigInt(1234567800000000000); // 1.2345678 SMR (more than 6 decimals)
+    console.log("DEPOSIT_VALUE_IN_WEI:", DEPOSIT_VALUE_IN_WEI);
+
     const userWalletAddress = await signer.getAddress();
     console.log("userWalletAddress:", userWalletAddress);
 
     const userBalanceBeforeDeposit = await getBalanceNative(userWalletAddress);
-    // console.log("userBalanceBeforeDeposit:", userBalanceBeforeDeposit);
+    console.log("userBalanceBeforeDeposit:", userBalanceBeforeDeposit);
 
     // Depost 1 wei
-    await wSMRTokenContract.connect(signer).deposit({
-      value: ONE_WEI,
+    const tx = await wSMRTokenContract.connect(signer).deposit({
+      value: DEPOSIT_VALUE_IN_WEI,
     });
 
+    const txReceipt = await tx.wait();
+
+    // console.log("txReceipt:", txReceipt);
+
     const userBalanceAfterDeposit = await getBalanceNative(userWalletAddress);
-    // console.log("userBalanceAfterDeposit:", userBalanceAfterDeposit);
+    console.log("userBalanceAfterDeposit:", userBalanceAfterDeposit);
 
-    // const userBalanceWSMRTokens = await wSMRTokenContract.balanceOf(
-    //   userWalletAddress
-    // );
-    // console.log(
-    //   "userBalanceWSMRTokens:",
-    //   userBalanceWSMRTokens / BigInt(Math.pow(10, 18))
-    // );
+    const txFee_hardcoded = BigInt(60_058 * (1000 * Math.pow(10, 9)));
+    console.log("txFee_hardcoded:", txFee_hardcoded);
 
-    const txFee = BigInt(60_058 * (1000 * Math.pow(10, 9)));
+    const txFee_fromReceipt =
+      BigInt(txReceipt.gasUsed) * BigInt(txReceipt.gasPrice);
+    console.log("txFee_fromReceipt:", txFee_fromReceipt);
 
-    // Always failed because 1 wei is discarded
-    expect(userBalanceAfterDeposit + ONE_WEI + txFee).to.equal(
-      userBalanceBeforeDeposit
-    );
+    expect(
+      userBalanceAfterDeposit + DEPOSIT_VALUE_IN_WEI + txFee_fromReceipt
+    ).to.equal(userBalanceBeforeDeposit);
   });
 });
