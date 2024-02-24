@@ -21,11 +21,15 @@ The wSMR tokens can be unwrapped back into the SMR tokens.
 
 `npm i`
 
+## Compile contracts
+
+`npm run compile`
+
 ## Configuration
 
 - The deployer account private key is configured in `.env` that is renamed from the template `.env.example`.
 
-- Contract deployment parameters are configured in `configuration.ts`.
+- Contract deployment parameters are configured in `configuration.ts` (2 reference files for test and prod)
 
 ## Governance deployment
 

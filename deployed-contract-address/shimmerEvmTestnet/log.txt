@@ -1,0 +1,12 @@
+shimmer-evm-governance$ npm run deploy-shimmerEvmTestnet
+
+> if-governance@1.0.0 deploy-shimmerEvmTestnet
+> npx hardhat run scripts/deploy_governance.ts --network shimmerEvmTestnet
+
+wSMRTokenContract address: 0x1d4f222E70C3B0c8c5b27A43174bD3276A214722
+IFTimelockContract address: 0x4d70c9D3ac5304170aA0389eC78050B83240Fc8C
+IFGovernorContract address: 0x0DDbaA33F0b95Bb5543A362dD9DE489cC38200AA
+IFTimelockContract grant PROPOSER_ROLE to IFGovernorContract - tx: 0x5d6a5462b7bc59e69bd05397c98846912aa93cd49dfc8a220a54056837945e78
+Disable EXECUTOR_ROLE of IFTimelockContract - tx: 0x6dc4310f4e7a5f191acc0e47523e776ac9a139303b83796c96e09b4195133fca
+IFTimelockContract grant ADMIN_ROLE to a multisig (0x5e812d3128D8fD7CEac08CEca1Cd879E76a6E028) - tx: 0xf5a2ccf2a39892a8a4e786e67087b31c682641b48ac3a4e974960d387d79ff85
+Revoke Timelock's ADMIN_ROLE of the deploying account - tx: 0x5f6c2ed97666c70ec64bf89c3c304ca57ddfd9ade822c444bb8fae730fd09b29
