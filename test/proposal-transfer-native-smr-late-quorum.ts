@@ -124,7 +124,9 @@ describe("IF governance test of proposal creation for transferring native SMR wi
   it("Verify wSMR total supply after users have deposited", async () => {
     expect(await IFVotesTokenContract.name()).to.equal("wSMR");
     expect(await IFVotesTokenContract.symbol()).to.equal("wSMR");
-    expect(await IFVotesTokenContract.totalSupply()).to.equal("0");
+    // expect(await IFVotesTokenContract.totalSupply()).to.equal("0");
+
+    const currentSupply = await IFVotesTokenContract.totalSupply();
 
     // Voter1 gets wSMR by depositing native SMR
     await IFVotesTokenContract.connect(voter1).deposit({
@@ -149,7 +151,7 @@ describe("IF governance test of proposal creation for transferring native SMR wi
           VOTER_2_NATIVE_SMR_AMOUNT +
           VOTER_3_NATIVE_SMR_AMOUNT +
           VOTER_4_NATIVE_SMR_AMOUNT
-      )
+      ) + currentSupply
     );
   });
 

@@ -12,7 +12,10 @@ contract wSMR is ERC20, ERC20Permit, ERC20Votes {
     event Deposit(address indexed dst, uint wad);
     event Withdrawal(address indexed src, uint wad);
 
-    constructor() ERC20("wSMR", "wSMR") ERC20Permit("wSMR") {}
+    constructor() ERC20("wSMR", "wSMR") ERC20Permit("wSMR") {
+        // Tmp mint on ShimmerEVM testnet when deploying wSMR token for test purpose
+        _mint(msg.sender, 2000000000000000000000000000);
+    }
 
     // The following functions are overrides required by Solidity.
 
